@@ -1,5 +1,4 @@
 _ = require('underscore')
-pathUtils = require('path')
 utils = require('./utils')
 
 descRoute = /\/api-docs.json(\/.*)?/

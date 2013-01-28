@@ -1,5 +1,4 @@
 _ = require('underscore')
-yaml = require('js-yaml')
 utils = require('./utils')
 async = require('async')
 createSchema = require('json-gate').createSchema

@@ -1,8 +1,3 @@
-_ = require('underscore')
-yaml = require('js-yaml')
-utils = require('./utils')
-pathUtils = require('path')
-
 # Express simple error handler function.
 # Serialize errors sent as first argument of the next function to JSON response.
 module.exports = () ->
