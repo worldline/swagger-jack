@@ -1,0 +1,27 @@
+{
+  "author": "damien feugas",
+  "name": "swagger",
+  "description": "Express compliant tooling to generate swagger Json API and validate Web-layer input/output",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "engines": {
+    "node": "+0.8.0"
+  },
+  "scripts": {
+    "test": "(set NODE_ENV=test) & mocha --compilers coffee:coffee-script -R spec",
+    "postinstall": "coffee --bare -o lib -c src"
+  },
+  "dependencies": {
+    "async": "0.1.22",
+    "express": "3.0.6",
+    "json-gate": "0.8.21",
+    "underscore": "1.4.3",
+    "request": "2.12.0"
+  },
+  "devDependencies": {
+    "chai": "1.4.1",
+    "js-yaml": "1.0.3",
+    "mocha": "1.8.1",
+    "coffee-script": "1.4.0"
+  }
+}

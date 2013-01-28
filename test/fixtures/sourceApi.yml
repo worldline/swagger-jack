@@ -1,0 +1,20 @@
+resourcePath: /source
+apis:
+- path: /source
+  operations:
+  - httpMethod: GET
+    nickname: list
+
+  - httpMethod: POST
+    nickname: create
+
+- path: /source/{id}
+  operations:
+  - httpMethod: GET
+    nickname: getById
+
+  - httpMethod: PUT
+    nickname: update
+
+  - httpMethod: DELETE
+    nickname: remove

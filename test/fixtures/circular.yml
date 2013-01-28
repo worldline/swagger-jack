@@ -1,0 +1,32 @@
+resourcePath: /api
+apis: 
+
+- path: /circular
+  operations:
+
+  - httpMethod: POST
+    nickname: returnBody
+    parameters:
+
+    - name: user
+      dataType: CircularUser
+      paramType: body
+      required: true
+
+models:
+
+  AddressBook:
+    id: AddressBook
+    properties:
+      friends:
+        type: array
+        items: 
+          $ref: CircularUser
+
+  CircularUser:
+    id: CircularUser
+    properties:
+      name:
+        type: string
+      addressbook:
+        type: AddressBook

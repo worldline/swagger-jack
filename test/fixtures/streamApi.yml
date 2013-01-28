@@ -1,0 +1,6 @@
+resourcePath: /stream
+apis:
+- path: /stream/stats
+  operations:
+  - httpMethod: GET
+    nickname: stat

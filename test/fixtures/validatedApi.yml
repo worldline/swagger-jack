@@ -1,0 +1,226 @@
+resourcePath: /api
+apis: 
+
+- path: /api/noparams/{id}
+  operations:
+  - httpMethod: GET
+    nickname: passed
+
+- path: /api/pathparams/{param1}/{param2}
+  operations:
+  - httpMethod: GET
+    nickname: returnParams
+    parameters:
+
+    - name: param1
+      dataType: int
+      paramType: path
+
+    - name: param2
+      dataType: boolean
+      paramType: path
+
+- path: /api/queryparams
+  operations:
+  - httpMethod: GET
+    nickname: returnParams
+    parameters:
+
+    - name: param1
+      dataType: int
+      paramType: query
+      required: true
+
+    - name: param2
+      dataType: float
+      paramType: query
+
+    - name: param3
+      dataType: boolean
+      paramType: query
+      allowMultiple: true
+
+- path: /api/headerparams
+  operations:
+  - httpMethod: GET
+    nickname: returnParams
+    parameters:
+
+    - name: param1
+      dataType: long
+      paramType: header
+      required: true
+
+    - name: param2
+      dataType: boolean
+      paramType: header
+
+    - name: param3
+      dataType: double
+      paramType: header
+      allowMultiple: true
+
+- path: /api/singleintbody
+  operations:
+
+  - httpMethod: POST
+    nickname: returnBody
+    parameters:
+
+    - dataType: int
+      paramType: body
+      required: true
+
+- path: /api/multiplebody
+  operations:
+
+  - httpMethod: POST
+    nickname: returnBody
+    parameters:
+
+    - name: param1
+      dataType: long
+      paramType: body
+      required: true
+
+    - name: param2
+      dataType: boolean
+      paramType: body
+      required: false
+      allowMultiple: true
+
+- path: /api/complexbody
+  operations:
+
+  - httpMethod: POST
+    nickname: returnBody
+    parameters:
+
+    - dataType: User
+      paramType: body
+      required: true
+
+- path: /api/complexqueryparam
+  operations:
+
+  - httpMethod: GET
+    nickname: returnParams
+    parameters:
+
+    - name: user
+      dataType: User
+      paramType: query
+      required: true
+
+- path: /api/complexheaderparam
+  operations:
+
+  - httpMethod: GET
+    nickname: returnParams
+    parameters:
+
+    - name: user
+      dataType: User
+      paramType: header
+      required: true
+
+- path: /api/jsonschemabody
+  operations:
+
+    - httpMethod: POST
+      nickname: returnBody
+      parameters:
+
+      - dataType: ExtendedUser
+        paramType: body
+        required: true
+
+- path: /api/unionbody
+  operations:
+
+    - httpMethod: POST
+      nickname: returnBody
+      parameters:
+
+      - dataType: UnionUser
+        paramType: body
+        required: true
+models:
+
+  Address:
+    id: Address
+    properties:
+      zipcode:
+        type: long
+        allowableValues:
+          valueType: RANGE
+          min: 0
+          max: 99999
+      street:
+        type: string
+      city:
+        type: string
+        allowableValues:
+          valueType: LIST
+          values: [lyon, villeurbanne, paris]
+
+  User:
+    id: User
+    properties:
+      id:
+        type: int
+        required: true
+      name:
+        type: string
+      stuff:
+        type: object
+        properties:
+          name: 
+            type: string
+            required: true
+      addresses:
+        type: array
+        items: 
+          $ref: Address
+
+  ExtendedUser:
+    id: ExtendedUser
+    properties:
+      id:
+        type: int
+        required: true
+      name:
+        type: 'any'
+      phone:
+        type: string
+        pattern: ^[0-9]{5}-[0-9]{4}$
+        required: true
+    additionalProperties:  
+      type: string
+
+  FullName:
+    id: FullName
+    properties:
+      title:
+        type: string
+      firstName: 
+        type: string
+      lastName: 
+        type: string
+
+  UnionUser:
+    id: UnionUser
+    properties:
+      id:
+        type: int
+        required: true
+      name:
+        type: 
+        - string 
+        - FullName
+        - type: object
+          properties:
+            first: 
+              type: string
+            last: 
+              type: string
