@@ -1,5 +1,4 @@
 _ = require('underscore')
-yaml = require('js-yaml')
 pathUtils = require('path')
 utils = require('./utils')
 
