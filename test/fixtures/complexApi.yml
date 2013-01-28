@@ -1,0 +1,38 @@
+resourcePath: /example
+apis: 
+
+- path: /example
+  operations:
+
+  - httpMethod: POST
+    nickname: passed
+    parameters:
+
+    - dataType: User
+      paramType: body
+      required: true
+
+models:
+
+  Address:
+    id: Address
+    properties:
+      zipcode:
+        type: long
+      street:
+        type: string
+      city:
+        type: string
+
+  User:
+    id: User
+    properties:
+      id:
+        type: int
+        required: true
+      name:
+        type: string
+      addresses:
+        type: array
+        items: 
+          $ref: Address

@@ -70,35 +70,36 @@ convertModel = (models, model, _stack) ->
   _.extend(result.properties, model.properties)
   # perform property level conversion
   for name, prop of result.properties
-    val = _.extend(prop, model.properties[name])
+    _.extend(prop, model.properties[name])
     # convert allowableValues
-    if val.allowableValues?.valueType?
-      switch val.allowableValues.valueType.toLowerCase()
+    if prop.allowableValues?.valueType?
+      switch prop.allowableValues.valueType.toLowerCase()
         when 'range'
-          val.minimum = val.allowableValues.min
-          val.maximum = val.allowableValues.max
-          delete val.allowableValues
+          prop.minimum = prop.allowableValues.min
+          prop.maximum = prop.allowableValues.max
+          delete prop.allowableValues
         when 'list'
-          val.enum = val.allowableValues.values
-          delete val.allowableValues
+          prop.enum = prop.allowableValues.values
+          delete prop.allowableValues
 
     # resolve references
-    ltype = if _.isString(val.type) then val.type.toLowerCase() else ''
-    if val.type of models
+    ltype = if _.isString(prop.type) then prop.type.toLowerCase() else ''
+    if prop.type of models
       # type is a model id
-      _.extend(val, convertModel(models, models[val.type], _stack))
-      val.type = 'object'
-    else if ltype in ['list', 'set', 'array'] and val.items?.$ref?
+      _.extend(prop, convertModel(models, models[prop.type], _stack))
+      prop.type = 'object'
+    else if ltype in ['list', 'set', 'array'] and prop.items?.$ref?
       # for lists, sets and arrays, items.$ref hold the referenced model id
-      _.extend(val.items, convertModel(models, models[val.items.$ref], _stack))
-      delete val.items.$ref
-      val.type = 'array'
+      _.extend(prop.items, convertModel(models, models[prop.items.$ref], _stack))
+      delete prop.items.$ref
+      prop.items.type = 'object'
+      prop.type = 'array'
     else if ltype is 'object'
       # recursive properties
-      _.extend(val, convertModel(models, val, _stack))
+      _.extend(prop, convertModel(models, prop, _stack))
     else
       # convert primitive type
-      val.type = convertType(val.type, null, false, models)
+      prop.type = convertType(prop.type, null, false, models)
   
   return result
 
@@ -176,13 +177,7 @@ validate = (req, path, specs, next) ->
   # casted parameters
   req.input = {}
   # path parameter extraction will be performed later by express: we must perform it ourselves
-  pathParamsNames = {}
-  i = 0
-  # create a regular expression to extract path parameters and isolate their names
-  regex = new RegExp(path.replace(/:([^\/]+)/g, (match, key) ->
-    pathParamsNames[key] = ++i
-    return '([^\/]*)'
-  ))
+  [regex, pathParamsNames] = utils.extractParameters(path)
 
   process = () ->
     # validates all parameter in parrallel
@@ -258,7 +253,11 @@ validate = (req, path, specs, next) ->
         done(err)
       )
     
-    , next)
+    , (err) ->
+      # if an error is found, use the 400 Http code (BAD_REQUEST)
+      err?.status = 400
+      next(err)
+    )
 
   # body parsing, if incoming request is not json, multipart of form-urlencoded
   unless req.is('json') or req.is('application/x-www-form-urlencoded') or req.is('multipart/form-data')
@@ -292,7 +291,8 @@ module.exports = (app) ->
   routes = {}
   # analyze the descriptor
   try
-    routes = analyzeRoutes(app.descriptor)
+    # make a deep copy to avoid manipulation on the descriptor
+    routes = analyzeRoutes(JSON.parse(JSON.stringify(app.descriptor)))
   catch err
     throw new Error("Failed to analyze descriptor: #{err.toString()}\n#{err.stack}")
 

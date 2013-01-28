@@ -1,10 +1,11 @@
-express = require('express')
+require 'js-yaml'
+express = require 'express'
 assert = require('chai').assert
-request = require('request')
-http = require('http')
-swagger = require('../')
-pathUtils = require('path')
-_  = require('underscore')
+request = require 'request'
+http = require 'http'
+swagger = require '../'
+pathUtils = require 'path'
+_  = require 'underscore'
 
 describe 'API generation tests', ->
   server = null
@@ -32,7 +33,7 @@ describe 'API generation tests', ->
       swagger.generator express(), {}, [{}]
     , /Resource must contain 'api' and 'controller' attributes/
 
-  it 'should fail if on missing resource path', ->
+  it 'should fail on missing resource path', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api: {}
@@ -40,7 +41,7 @@ describe 'API generation tests', ->
       ]
     , /Resource without path/
 
-  it 'should fail if on missing api path', ->
+  it 'should fail on missing api path', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api:
@@ -51,7 +52,7 @@ describe 'API generation tests', ->
       ]
     , /api without path/
 
-  it 'should fail if on unsupported operation in descriptor', ->
+  it 'should fail on unsupported operation in descriptor', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api:
@@ -67,7 +68,7 @@ describe 'API generation tests', ->
       ]
     , /operation TOTO is not supported/
 
-  it 'should fail if on unknown nickname in descriptor', ->
+  it 'should fail on unknown nickname in descriptor', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api:
@@ -83,7 +84,7 @@ describe 'API generation tests', ->
       ]
     , /nickname doNotExist cannot be found in controller/
 
-  it 'should fail if on missing nickname in descriptor', ->
+  it 'should fail on missing nickname in descriptor', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api:
@@ -98,7 +99,7 @@ describe 'API generation tests', ->
       ]
     , /does not specify a nickname/
 
-  it 'should fail if on duplicate parameters in descriptor', ->
+  it 'should fail on duplicate parameters in descriptor', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api:
@@ -127,6 +128,264 @@ describe 'API generation tests', ->
       ]
     , /has duplicates parameters: p1,p3/
 
+  it 'should fail on parameter (not body) without name', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+              parameters: [
+                paramType: 'query'
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /parameter with no name/
+
+  it 'should fail on parameter without paramType', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+              parameters: [
+                name: 'p1'
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /parameter p1 has no type/
+
+  it 'should fail on unknown type parameter', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+              parameters: [
+                name: 'p1'
+                paramType: 'unkown'
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /parameter p1 type unkown is not supported/
+
+  it 'should fail on optionnal path parameter', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/{p1}'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+              parameters: [
+                name: 'p1'
+                paramType: 'path'
+                required: false
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /path parameter p1 cannot be optionnal/
+
+  it 'should fail on path parameter with multiple values', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/{p1}'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+              parameters: [
+                name: 'p1'
+                paramType: 'path'
+                multipleAllowed: true
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /path parameter p1 cannot allow multiple values/
+
+  it 'should fail on path parameter disclosure between path and parameter array', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/{p1}/{p2}/{p3}'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+              parameters: [
+                name: 'p1'
+                paramType: 'path'
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /declares 3 parameters in its path, and 1 in its parameters array/
+
+  it 'should fail on path parameter name disclosure between path and parameter array', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/{p1}/{p2}'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+              parameters: [
+                name: 'p1'
+                paramType: 'path'
+              ,
+                name: 'p3'
+                paramType: 'path'
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /declares parameter p2 in its path, but not in its parameters array/
+
+  it 'should fail on two anonymous body parameters', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/test'
+            operations: [
+              httpMethod: 'POST'
+              nickname: 'stat'
+              parameters: [
+                paramType: 'body'
+              ,
+                paramType: 'body'
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /has more than one anonymous body parameter/
+
+  it 'should fail on body parameters for other than put and post', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/test'
+            operations: [
+              httpMethod: 'DELETE'
+              nickname: 'stat'
+              parameters: [
+                paramType: 'body'
+              ]
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /operation DELETE does not allowed body parameters/
+
+  describe 'given a configured server with complex models', ->
+    app = null
+
+    # given a started server
+    before (done) ->
+      app = express()
+      app.use(express.cookieParser())
+        .use(express.methodOverride())
+        .use(express.bodyParser())
+        .use(swagger.generator(app, 
+          apiVersion: '1.0',
+          basePath: root
+        , [
+          api: require './fixtures/complexApi.yml'
+          controller: passed: (req, res) -> res.json status: 'passed'
+        ]))
+        # use validator also because it manipulates models
+        .use(swagger.validator(app))
+      server = http.createServer app
+      server.listen port, host, done
+
+    after (done) ->
+      server.close()
+      done()
+
+    it 'should reference models be untouched', (done) ->
+      # when requesting the API description details
+      request.get
+        url: 'http://'+host+':'+port+'/api-docs.json/example'
+        json: true
+      , (err, res, body) ->
+        return done err if err?
+        # then a json file is returned
+        assert.equal res.statusCode, 200
+        assert.deepEqual body,
+          apiVersion: '1.0'
+          basePath: '/api'
+          resourcePath: '/example'
+          apis: [
+            path: '/example'
+            operations: [
+              httpMethod: 'POST'
+              nickname: 'passed'
+              parameters: [
+                dataType: 'User'
+                paramType: 'body'
+                required: true
+              ]
+            ]
+          ],
+          models: 
+            Address:
+              id: 'Address'
+              properties:
+                zipcode:
+                  type: 'long'
+                street:
+                  type: 'string'
+                city:
+                  type: 'string'
+
+            User:
+              id: 'User'
+              properties:
+                id:
+                  type: 'int'
+                  required: true
+                name:
+                  type: 'string'
+                addresses:
+                  type: 'array'
+                  items: 
+                    $ref: 'Address'
+        done()
+
   describe 'given a properly configured and started server', ->
     app = null
 
@@ -138,7 +397,7 @@ describe 'API generation tests', ->
         app.use(express.cookieParser())
           .use(express.methodOverride())
           .use(express.bodyParser())
-          .use(swagger.generator app, 
+          .use(swagger.generator(app, 
             apiVersion: '1.0',
             basePath: root
           , [
@@ -147,7 +406,9 @@ describe 'API generation tests', ->
           ,
             api: require './fixtures/streamApi.yml'
             controller: require './fixtures/sourceCrud'
-          ])
+          ]))
+          # use validator also because it manipulates models
+          .use(swagger.validator(app))
       catch err
         return done err.stack
 

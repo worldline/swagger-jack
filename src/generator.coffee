@@ -5,18 +5,76 @@ descRoute = /\/api-docs.json(\/.*)?/
 descPath = '/api-docs.json'
 
 # Validates the specification of a given parameters
-validateParam = (parameter, models) ->
-  # TODO
-  # path paramer: no required, no multipleAllowed, same number as in path, name exists in path
-  # query parameter: ?
-  # header parameter: ?
-  # body parameter: only on 'put' and 'post' request, no multipleAllowed, if unamed, only one authorized
-  # type known if arbitrary model
+#
+# @param parameters [Array] list of existing parameters.
+# @param models [Object] associative array containing all possible models, model id used as key.
+# @param path [String] validate api's path (for understandable error messages).
+# @param path [String] validate api's method (for understandable error messages).
+# @throws if a parameter has no name
+# @throws if parameter type is not specified or unknown
+# @throws if a path parameter is optionnal
+# @throws if a path parameter allow multiple
+# @throws if declared path parameters number or names does not match the api.path declaration
+# @throws if two parameters share the same name
+# @throws if more than one body parameter has no name
+# @throws if a query, header or path parameter has no name
+validateParameters = (parameters, models, path, method) ->
+  errorPrefix = "Api #{path} operation #{method}"
+  # validates names unicity
+  duplicates = _.chain(parameters)
+    .pluck('name')                                # extract attribute name: ['p1', 'p2', 'p3', 'p1']
+    .filter((p) -> p?)                            # remove anonymous parameters
+    .countBy()                                    # group by name: {p1: 2, p2: 1, p3: 1
+    .pairs()                                      # make an array: [['p1', 2], ['p2', 1], ['p3': 1]]
+    .filter((arr) -> return arr[1] > 1)           # filter duplicates: [['p1', 2]]
+    .map((arr) -> return arr[0])                  # extarct names: ['p1']
+    .value()
+
+  if duplicates.length > 0
+    throw new Error("#{errorPrefix} has duplicates parameters: #{duplicates.join(',')}")
+  
+  # validates path parameter names and number
+  pathParameters = _.filter(parameters, (p) -> return p?.paramType?.toLowerCase() is 'path')
+  [__, routeParameters] = utils.extractParameters(utils.pathToRoute(path))
+  routeParametersLength = _.keys(routeParameters).length
+  if routeParametersLength isnt pathParameters.length
+    throw new Error("#{errorPrefix} declares #{routeParametersLength} parameters in its path, and #{pathParameters.length} in its parameters array - you missed something")
+  for name of routeParameters 
+    unless _.find(pathParameters, (p) -> return p.name is name)?
+      throw new Error("#{errorPrefix} declares parameter #{name} in its path, but not in its parameters array - propably a typo")
+
+  # validate anonymous parameter
+  if _.filter(parameters, (p) -> return p?.paramType?.toLowerCase() is 'body' and !(p?.name?)).length > 1
+    throw new Error("#{errorPrefix} has more than one anonymous body parameter - how is it possible M. Spock ?")
+
+  for parameter in parameters
+    unless parameter?.name? or parameter?.paramType?.toLowerCase() is 'body'
+      throw new Error("#{errorPrefix} has a non body parameter with no name - are you a k-pop fan ?")
+
+    switch parameter.paramType?.toLowerCase()
+      when 'path'
+        if parameter.required is false
+          throw new Error("#{errorPrefix} path parameter #{parameter.name} cannot be optionnal - system_internal_error")
+        if parameter.multipleAllowed is true
+          throw new Error("#{errorPrefix} path parameter #{parameter.name} cannot allow multiple values - I'll be curious to see that")
+      when 'body'
+        # only on put an post
+        unless method?.toLowerCase() in ['put', 'post']
+          throw new Error("#{errorPrefix} does not allowed body parameters - do you really knows http ?")
+      when 'header', 'query'
+        # nothing to check
+      else
+        if parameter.paramType?
+          throw new Error("#{errorPrefix} parameter #{parameter.name} type #{parameter.paramType} is not supported - 42")
+        else
+          throw new Error("#{errorPrefix} parameter #{parameter.name} has no type - what else ?")
+
+  # TODO type known if arbitrary model, no anonymous types
 
 
 # Validates the specified model
 validateModel = (model, id) ->
-  # TODO
+  # TODO known references, no anonymous inner models
   return model
 
 # Enrich the given descriptor with resources provided, and extract routes defined.
@@ -68,20 +126,8 @@ addRoutes = (descriptor, resources) ->
         
         # Validates parameters
         if _.isArray(operation.parameters)
-          # validates names unicity
-          duplicates = _.chain(operation.parameters)
-            .pluck('name')                                # extract attribute name: ['p1', 'p2', 'p3', 'p1']
-            .countBy()                                    # group by name: {p1: 2, p2: 1, p3: 1
-            .pairs()                                      # make an array: [['p1', 2], ['p2', 1], ['p3': 1]]
-            .filter((arr) -> return arr[1] > 1)           # filter duplicates: [['p1', 2]]
-            .map((arr) -> return arr[0])                  # extarct names: ['p1']
-            .value()
-
-          if duplicates.length > 0
-            throw new Error("Api #{api.path} operation #{operation.httpMethod} has duplicates parameters: #{duplicates.join(',')}")
-          
-          for parameter in operation.parameters
-            validateParam(parameter, descriptor.models)
+          # parameter validations
+          validateParameters(operation.parameters, descriptor.models, api.path, operation.httpMethod)
         
         route = utils.pathToRoute(api.path)
         unless operation.nickname of resource.controller
@@ -89,7 +135,7 @@ addRoutes = (descriptor, resources) ->
         
         # load the relevant script that must contain the middelware
         routes.push({method:verb, path:route, middleware: resource.controller[operation.nickname]})
-        console.log("found a route #{route} with verb #{verb} bound to exported method #{operation.nickname}")
+        #console.log("found a route #{route} with verb #{verb} bound to exported method #{operation.nickname}")
 
     # enrich descriptor
     descriptor.apis.push(resource.api)

@@ -1,3 +1,4 @@
+require 'js-yaml'
 express = require 'express'
 assert = require('chai').assert
 request = require 'request'

@@ -44,4 +44,21 @@ module.exports = {
       #        1-10                                   A-Z  a-z
       name.push(if n<10 then n else String.fromCharCode(n+(if n<36 then 55 else 61)))
     return name.join('')
+
+  # Extract path parameters names from a given path
+  # Returns two things.
+  #
+  # @param path [String] Express route, in which parameters are declared with ':'
+  # @return the matching regular expression
+  # @return an oject in which the extracted parameters are used as keys, and their respective position (0-based) as values
+  extractParameters: (path) ->
+    # path parameter extraction will be performed later by express: we must perform it ourselves
+    pathParamsNames = {}
+    i = 0
+    # create a regular expression to extract path parameters and isolate their names
+    regex = new RegExp(path.replace(/:([^\/]+)/g, (match, key) ->
+      pathParamsNames[key] = ++i
+      return '([^\/]*)'
+    ))
+    [regex, pathParamsNames]
 }
