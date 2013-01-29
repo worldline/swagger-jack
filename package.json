@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "(set NODE_ENV=test) & mocha --compilers coffee:coffee-script -R spec",
-    "postinstall": "coffee --bare -o lib -c src"
+    "postinstall": "PATH=$PATH:./node_modules/.bin coffee --bare -o lib -c src"
   },
   "dependencies": {
     "async": "0.1.22",
