@@ -8,8 +8,8 @@
     "node": "+0.8.0"
   },
   "scripts": {
-    "test": "(set NODE_ENV=test) & mocha --compilers coffee:coffee-script -R spec",
-    "postinstall": "coffee --bare -o lib -c src"
+    "test": "(set NODE_ENV=test) & ./node_modules/.bin/mocha --compilers coffee:coffee-script -R spec",
+    "postinstall": "./node_modules/.bin/coffee --bare -o lib -c src"
   },
   "dependencies": {
     "async": "0.1.22",
