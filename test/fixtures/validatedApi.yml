@@ -145,6 +145,19 @@ apis:
       - dataType: UnionUser
         paramType: body
         required: true
+
+- path: /api/upload
+  operations:
+
+    - httpMethod: POST
+      nickname: passed
+      parameters:
+      - name: file
+        paramType: body
+        description: The file to upload
+        dataType: file
+        required: true
+
 models:
 
   Address:

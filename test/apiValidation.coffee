@@ -3,6 +3,7 @@ express = require 'express'
 assert = require('chai').assert
 request = require 'request'
 http = require 'http'
+fs = require 'fs'
 swagger = require '../'
 pathUtils = require 'path'
 _  = require 'underscore'
@@ -44,6 +45,16 @@ postApi = (name, headers, body, status, expectedBody, done) ->
     assert.equal res.statusCode, status, "unexpected status when getting #{name}, body:\n#{JSON.stringify body}"
     assert.deepEqual body, expectedBody, "unexpected body when getting #{name}"
     done()
+
+# test function: send an Http request (a post) and expect a status and a json body.
+uploadFilePostApi = (name, file, status, done) ->
+  req = request.post
+    url: "http://#{host}:#{port+root}/#{name}"
+  , (err, res, body) ->
+    return done err if err?
+    assert.equal res.statusCode, status, "unexpected status when getting #{name}, body:\n#{JSON.stringify body}"
+    done()
+  req.form().append 'file', fs.createReadStream file
 
 # test function: send an Http request (a post multipart/form-data) and expect a status and a json body.
 multipartApi = (name, parts, status, expectedBody, done) ->
@@ -397,4 +408,12 @@ describe 'API validation tests', ->
           obj.name = 'jean dupond'
           postApi 'unionbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 200, {body:obj}, done
 
-          # TODO post, put, delete, file uploads, model list-set-arrays
+
+      it 'should accept upload file', (done) ->
+
+        file = pathUtils.join __dirname, 'fixtures/circular.yml'
+        uploadFilePostApi 'upload', file, 200, (err) ->
+          return done err if err?
+          done();
+
+          # TODO post, put, delete, model list-set-arrays
