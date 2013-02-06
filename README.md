@@ -172,7 +172,7 @@ To me it's very handy for a start, but has three problems:
 3. it does not use the descriptor to automatize input validation, and you still have to cast and check your parameters
 
 
-## License
+## License (MIT)
 
 Swagger is shipped with an MIT Licence. 
 
