@@ -1,7 +1,21 @@
 {
-  "author": "damien feugas",
-  "name": "swagger",
-  "description": "Express compliant tooling to generate swagger Json API and validate Web-layer input/output",
+  "author": "Damien Feugas",
+  "name": "swagger-jack",
+  "description": "Express compliant tooling to generate swagger Json API and validate Web-layer input/output. Based on json-gate",
+  "contributors": [ 
+    {
+      "name": "Filirom1",
+      "email": "filirom1@gmail.com"
+    } 
+  ],
+  "keywords": [
+    "swagger",
+    "express",
+    "validation",
+    "api",
+    "descriptor"
+  ],
+  "license": "MIT",
   "version": "1.0.0",
   "main": "lib/index.js",
   "engines": {
