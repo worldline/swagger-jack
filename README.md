@@ -9,10 +9,11 @@ It provides:
 * _specification_: to write descriptors of your API
 * _tools_: based on this descriptors: friendly GUI for documentation, client libraries...
 
-This nodeJs modules implements the swagger specification and offers you two middlewares to:
+**Swagger-Jack** is a nodeJS modules that implements the swagger specification and offers you three middlewares to:
 
 1. _generate_ your routes from a swagger descriptor, binding them to your own controller functions
 2. _validate_ all the API inputs (query parameter, headers, bodies...)
+3. report _errors_ in a consistent way
 
 ## How can I use it ?
 
@@ -183,3 +184,9 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+--------
+### Addendum: what's with that name ?
+
+We looked for a fun and yet eloquent name. But swagger.js was already used.
+[Jack Swagger](http://www.wwe.com/superstars/jackswagger) is an american catch superstar, and we never heard about him before, but it perfectly fits your naming goals :)
