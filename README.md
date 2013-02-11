@@ -1,5 +1,5 @@
 # Swagger for Express
-[![Build Status](https://travis-ci.org/feugy/swagger.png)](https://travis-ci.org/feugy/swagger)
+[![Build Status](https://travis-ci.org/feugy/swagger-jack.png)](https://travis-ci.org/feugy/swagger-jack)
 
 
 [Swagger](http://developers.helloreverb.com/swagger/) is a specification and complete framework implementation for describing, producing, consuming, and visualizing RESTful web services.
