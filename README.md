@@ -21,7 +21,7 @@ First, get the module, by referencing it inside your package.json:
 ```js
   "dependencies": {
     "express": "3.1.0",
-    "swagger": "1.0.0"
+    "swagger-jack": "1.0.0"
   }
 ```
 
@@ -29,7 +29,7 @@ Then, when creating your Express application, import and configure the two middl
 
 ```js
   var express = require('express'),
-      swagger = require('swagger');
+      swagger = require('swagger-jack');
 
   var app = express();
   
@@ -134,7 +134,7 @@ You may not use the error middleware and provide your own.
 Use js-yaml to store your descriptor in a separate file, and split your code into other controller modules:
 ```js
   var express = require('express'),
-      swagger = require('swagger'),
+      swagger = require('swagger-jack'),
       yaml = require('js-yaml');
 
   var app = express();
