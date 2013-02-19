@@ -16,14 +16,14 @@
     "descriptor"
   ],
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "lib/index.js",
   "engines": {
     "node": "+0.8.0"
   },
   "scripts": {
     "test": "NODE_ENV=test mocha --compilers coffee:coffee-script -R spec",
-    "test-win": "(set NODE_ENV=test) & mocha --compilers coffee:coffee-script -R spec",
+    "testwin": "(set NODE_ENV=test) & mocha --compilers coffee:coffee-script -R spec",
     "preinstall": "npm install -g coffee-script mocha",
     "postinstall": "coffee --bare -o lib -c src"
   },

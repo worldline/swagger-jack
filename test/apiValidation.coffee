@@ -57,13 +57,14 @@ uploadFilePostApi = (name, file, status, done) ->
   req.form().append 'file', fs.createReadStream file
 
 # test function: send an Http request (a post multipart/form-data) and expect a status and a json body.
-multipartApi = (name, parts, status, expectedBody, done) ->
+multipartApi = (name, formdata, parts, status, expectedBody, done) ->
   req =
     url: "http://#{host}:#{port+root}/#{name}",
-    headers:
-      'content-type': 'multipart/form-data'
     multipart: []
     encoding: 'utf8'
+  if formdata
+    req.headers = 
+      'content-type': 'multipart/form-data'
   for part, i in parts
     req.multipart.push
       'content-disposition': "form-data; name=\"#{parts[i].name}\""
@@ -260,13 +261,22 @@ describe 'API validation tests', ->
         postApi 'multiplebody', {'Content-Type': 'application/x-www-form-urlencoded'}, undefined, 400, {message: 'body parameter param1 is required'}, done
 
       it 'should multi-part body be required', (done) ->
-        multipartApi 'multiplebody', [{name: 'param', body: 'toto'}], 400, {message: 'body parameter param1 is required'}, done
+        multipartApi 'multiplebody', true, [{name: 'param', body: 'toto'}], 400, {message: 'body parameter param1 is required'}, done
 
       it 'should form-encoded body be parsed and casted down', (done) ->
         postApi 'multiplebody', {'Content-Type': 'application/x-www-form-urlencoded'}, 'param1=10&param2=true,false', 200, {body:{param1: 10, param2: [true, false]}}, done
 
-      it 'should multi-part body be parsed and casted down', (done) ->
-        multipartApi 'multiplebody', [
+      it 'should multi-part/related body not be parsed', (done) ->
+        multipartApi 'multiplebody', false, [
+            name: 'param1'
+            body: '-5' 
+          ,
+            name: 'param2'
+            body: 'false,true' 
+          ], 400, {message: 'body parameter param1 is required'}, done
+
+      it 'should multi-part/form-data body be parsed and casted down', (done) ->
+        multipartApi 'multiplebody', true, [
             name: 'param1'
             body: '-5' 
           ,
@@ -275,7 +285,7 @@ describe 'API validation tests', ->
           ], 200, {body:{param1: -5, param2: [false, true]}}, done
 
       it 'should multi-part body parameter be optionnal', (done) ->
-        multipartApi 'multiplebody', [{name: 'param1', body: '0'}], 200, {body:{param1: 0}}, done
+        multipartApi 'multiplebody', true, [{name: 'param1', body: '0'}], 200, {body:{param1: 0}}, done
 
       it 'should complex json body be parsed', (done) ->
         obj =

@@ -259,20 +259,19 @@ validate = (req, path, specs, next) ->
       next(err)
     )
 
-  # body parsing, if incoming request is not json, multipart of form-urlencoded
-  unless req.is('json') or req.is('application/x-www-form-urlencoded') or req.is('multipart/form-data')
-    # by default, no body
-    delete req.body
-    # TODO, set request encoding to the incoming charset or to utf8 by default
-    req.on('data', (chunk) ->
-      if(!req.body)
-        req.body = ''
-      req.body += chunk
-    )
+  return process() if req.is('json') or req.is('application/x-www-form-urlencoded') or req.is('multipart/form-data')
+  # body parsing, if incoming request is not json, multipart or form-urlencoded
+  # by default, no body
+  delete req.body
+  # TODO, set request encoding to the incoming charset or to utf8 by default
+  req.on('data', (chunk) ->
+    if(!req.body)
+      req.body = ''
+    req.body += chunk
+  )
 
-    # only process raw body at the end.
-    return req.on('end', process)
-  process()
+  # only process raw body at the end.
+  return req.on('end', process)
 
 # Validator function.
 # Analyze the API descriptor to extract awaited parameters and bodiy
