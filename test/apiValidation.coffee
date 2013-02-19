@@ -47,14 +47,15 @@ postApi = (name, headers, body, status, expectedBody, done) ->
     done()
 
 # test function: send an Http request (a post) and expect a status and a json body.
-uploadFilePostApi = (name, file, status, done) ->
+uploadFilePostApi = (name, file, partName, status, expectedBody, done) ->
   req = request.post
     url: "http://#{host}:#{port+root}/#{name}"
   , (err, res, body) ->
     return done err if err?
     assert.equal res.statusCode, status, "unexpected status when getting #{name}, body:\n#{JSON.stringify body}"
+    assert.deepEqual JSON.parse(body), expectedBody, "unexpected body when getting #{name}"
     done()
-  req.form().append 'file', fs.createReadStream file
+  req.form().append partName, fs.createReadStream file
 
 # test function: send an Http request (a post multipart/form-data) and expect a status and a json body.
 multipartApi = (name, formdata, parts, status, expectedBody, done) ->
@@ -65,10 +66,11 @@ multipartApi = (name, formdata, parts, status, expectedBody, done) ->
   if formdata
     req.headers = 
       'content-type': 'multipart/form-data'
-  for part, i in parts
-    req.multipart.push
-      'content-disposition': "form-data; name=\"#{parts[i].name}\""
-      body: parts[i].body 
+  for part in parts
+    obj = 
+      body: part.body 
+    obj['content-disposition'] = "form-data; name=\"#{part.name}\"" if part.name?
+    req.multipart.push obj
 
   request.post req, (err, res, body) ->
     return done err if err?
@@ -418,12 +420,21 @@ describe 'API validation tests', ->
           obj.name = 'jean dupond'
           postApi 'unionbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 200, {body:obj}, done
 
-
       it 'should accept upload file', (done) ->
 
-        file = pathUtils.join __dirname, 'fixtures/circular.yml'
-        uploadFilePostApi 'upload', file, 200, (err) ->
-          return done err if err?
-          done();
+        file = pathUtils.join __dirname, 'fixtures', 'circular.yml'
+        uploadFilePostApi 'upload', file, 'file', 200, {status:'passed'}, done
 
-          # TODO post, put, delete, model list-set-arrays
+      it 'should reject when passing file not in multipart', (done) ->
+
+        file = pathUtils.join __dirname, 'fixtures/circular.yml'
+        postApi 'upload', {'Content-Type': 'application/json'}, JSON.stringify(file:file.toString()), 400, 
+          {message: "body parameter file is required"}, done
+
+      it 'should fail on missing body file', (done) ->
+
+        file = pathUtils.join __dirname, 'fixtures/circular.yml'
+        uploadFilePostApi 'upload', file, 'other', 400,
+          {message: "body parameter file is required"}, done
+
+    # TODO post, put, delete, model list-set-arrays

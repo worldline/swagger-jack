@@ -203,16 +203,13 @@ validate = (req, path, specs, next) ->
         when 'body'
           errPrefix = "body parameter #{spec.name}"
           if spec.name
-            # named parameter: take it from parsed body, or from part
-            if req.files and spec.name of req.files
-              value = req.files[spec.name]
+            # named parameter: take it from parsed body, or from file part
+            if type is 'file'
+              value = req.files?[spec.name]
               # specific case of files: do not validate with json-gate
-              return done(if type isnt 'file' then "#{errPrefix} must is a file when it should be a #{type}");
+              return done if !(value?) then "#{errPrefix} is required"
             else
               value = req.body[spec.name]
-              if type is 'file'
-                # do not accept body part if waiting for a file
-                return done("#{errPrefix} must is a #{type} when it should be a file")
           else
             errPrefix = 'body'
             # unamed parameter: take all body
