@@ -207,7 +207,7 @@ validate = (req, path, specs, next) ->
             if type is 'file'
               value = req.files?[spec.name]
               # specific case of files: do not validate with json-gate
-              return done if !(value?) then "#{errPrefix} is required"
+              return done if !(value?) then new Error "#{errPrefix} is required"
             else
               value = req.body[spec.name]
           else
@@ -215,7 +215,7 @@ validate = (req, path, specs, next) ->
             # unamed parameter: take all body
             value = req.body
         else
-          throw new Error("unsupported parameter type #{spec.kind}")
+          throw new Error "unsupported parameter type #{spec.kind}"
 
       if type is 'array'
         # multiple values awaited
