@@ -207,7 +207,7 @@ validate = (req, path, specs, next) ->
             if type is 'file'
               value = req.files?[spec.name]
               # specific case of files: do not validate with json-gate
-              return done if !(value?) then new Error "#{errPrefix} is required"
+              return done if !(value?) and spec.schema.schema.required then new Error "#{errPrefix} is required"
             else
               value = req.body[spec.name]
           else

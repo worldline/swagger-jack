@@ -259,6 +259,9 @@ describe 'API validation tests', ->
       it 'should primitive json body be required', (done) ->
         postApi 'singleintbody', {'Content-Type': 'application/json'}, undefined, 400, {message: 'Bad Request'}, done
 
+      it 'should body parameter be optionnal', (done) ->
+        postApi 'optionnalbody', null, undefined, 200, {}, done
+
       it 'should form-encoded body be required', (done) ->
         postApi 'multiplebody', {'Content-Type': 'application/x-www-form-urlencoded'}, undefined, 400, {message: 'body parameter param1 is required'}, done
 

@@ -20,7 +20,7 @@
     "url": "https://github.com/feugy/swagger-jack"
   },
   "license": "MIT",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "lib/index.js",
   "engines": {
     "node": "+0.8.0"
@@ -28,8 +28,7 @@
   "scripts": {
     "test": "NODE_ENV=test mocha --compilers coffee:coffee-script -R spec",
     "testwin": "(set NODE_ENV=test) & mocha --compilers coffee:coffee-script -R spec",
-    "preinstall": "npm install -g coffee-script mocha",
-    "postinstall": "coffee --bare -o lib -c src"
+    "prepublish": "coffee --bare -o lib -c src"
   },
   "dependencies": {
     "async": "0.1.22",

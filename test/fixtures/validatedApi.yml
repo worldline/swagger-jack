@@ -71,6 +71,16 @@ apis:
       paramType: body
       required: true
 
+- path: /api/optionnalbody
+  operations:
+
+  - httpMethod: POST
+    nickname: returnBody
+    parameters:
+
+    - dataType: int
+      paramType: body
+
 - path: /api/multiplebody
   operations:
 
