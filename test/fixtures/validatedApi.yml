@@ -99,6 +99,18 @@ apis:
       required: false
       allowMultiple: true
 
+- path: /api/multipleanonymousbody
+  operations:
+
+  - httpMethod: POST
+    nickname: returnBody
+    parameters:
+
+    - dataType: long
+      paramType: body
+      required: false
+      allowMultiple: true
+
 - path: /api/complexbody
   operations:
 
@@ -109,6 +121,18 @@ apis:
     - dataType: User
       paramType: body
       required: true
+
+- path: /api/multiplecomplexbody
+  operations:
+
+  - httpMethod: POST
+    nickname: returnBody
+    parameters:
+
+    - dataType: User
+      paramType: body
+      required: false
+      allowMultiple: true
 
 - path: /api/complexqueryparam
   operations:

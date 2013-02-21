@@ -303,6 +303,33 @@ describe 'API validation tests', ->
           ] 
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 200, {body:obj}, done
 
+      it 'should multiple anonymous optionnal body accept one value', (done) ->
+        postApi 'multipleanonymousbody', undefined, '1', 200, {body: [1]}, done
+
+      it 'should multiple anonymous optionnal body accept multiple values', (done) ->
+        postApi 'multipleanonymousbody', undefined, '1,2,3', 200, {body: [1,2,3]}, done
+
+      it 'should multiple anonymous optionnal body accept no values', (done) ->
+        postApi 'multipleanonymousbody', undefined, undefined, 200, {}, done
+
+      it 'should multiple anonymous optionnal body accept one json value', (done) ->
+        postApi 'multipleanonymousbody', {'Content-Type': 'application/json'}, '[1]', 200, {body: [1]}, done
+
+      it 'should multiple anonymous optionnal body accept multiple json values', (done) ->
+        postApi 'multipleanonymousbody', {'Content-Type': 'application/json'}, '[1,2,3]', 200, {body: [1,2,3]}, done
+
+      it 'should multiple complex optionnal body accept no values', (done) ->
+        postApi 'multiplecomplexbody', undefined, undefined, 200, {}, done
+
+      it 'should multiple complex optionnal body accept one json value', (done) ->
+        postApi 'multiplecomplexbody', {'Content-Type': 'application/json'}, '{"id":1, "name":"jean"}', 200, {body: [{id:1, name:'jean'}]}, done
+
+      it 'should multiple complex optionnal body accept multiple json values', (done) ->
+        postApi 'multiplecomplexbody', {'Content-Type': 'application/json'}, '[{"id":1, "name":"jean"},{"id":2, "name":"paul"}]', 200, {body: [
+          {id:1, name:'jean'},
+          {id:2, name:'paul'}
+        ]}, done
+
     describe 'given an api accepting model parameter', ->
 
       it 'should complex json body be checked', (done) ->

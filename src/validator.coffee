@@ -220,7 +220,7 @@ validate = (req, path, specs, next) ->
       if type is 'array'
         # multiple values awaited
         if value isnt undefined
-          value = if _.isArray(value) then value else if value then value.split(',') else value
+          value = if _.isArray(value) then value else if _.isString(value) then value.split(',') else [value]
           type = spec.schema.schema.items.type
           value = _.map(value, (v) -> return utils.cast(type, v))
 
