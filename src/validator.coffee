@@ -260,17 +260,14 @@ validate = (req, path, specs, next) ->
     )
 
   return process() if req.is('json') or req.is('application/x-www-form-urlencoded') or req.is('multipart/form-data')
-  # body parsing, if incoming request is not json, multipart or form-urlencoded
-  # by default, no body
-  delete req.body
-  # TODO, set request encoding to the incoming charset or to utf8 by default
-  req.on('data', (chunk) ->
-    if(!req.body)
-      req.body = ''
-    req.body += chunk
-  )
-
-  # only process raw body at the end.
+  
+  # body parsing should be done by connect.json(), connect.bodyParser() or any other body parser!
+  
+  # if connect.json() has already defined the body, that means end has been triggered so just process
+  # this might occured when content-size is 0!
+  return process() if req.body
+  # else wait the end and process
+  # body might be processed or not, this is not part of swagger-jack job
   return req.on('end', process)
 
 # Validator function.
