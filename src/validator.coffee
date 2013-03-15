@@ -209,7 +209,10 @@ validate = (req, path, specs, next) ->
               # specific case of files: do not validate with json-gate
               return done if !(value?) and spec.schema.schema.required then new Error "#{errPrefix} is required"
             else
-              value = req.body[spec.name]
+              if req.body
+                value = req.body[spec.name]
+              else
+                value = undefined
           else
             errPrefix = 'body'
             # unamed parameter: take all body
