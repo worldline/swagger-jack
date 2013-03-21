@@ -94,46 +94,49 @@ addRoutes = (descriptor, resources) ->
   # analyze each resources
   for resource in resources
     # check mandatory informations
-    unless _.isObject(resource.api) and _.isObject(resource.controller)
-      throw new Error("Resource must contain 'api' and 'controller' attributes")
-    unless _.isString(resource.api.resourcePath)
-      throw new Error('Resource without path - are you kidding')
-      
+    unless _.isObject(resource.api)
+      throw new Error("Resource must contain 'api' attribute")
+
     # add models
     if _.isObject(resource.api.models)
       for id, model of resource.api.models
         descriptor.models[id] = validateModel(model, id)
+
+    # allow api without controllers, but do not generate routes
+    if _.isObject(resource.controller)
+      unless _.isString(resource.api.resourcePath)
+        throw new Error('Resource without path - are you kidding')
+
+      # analyze each api within a given resource
+      for api in resource.api.apis
+        unless _.isString(api.path)
+          throw new Error("Resource #{resource.api.resourcePath} has an api without path - D\'oh'") 
         
-    # analyze each api within a given resource
-    for api in resource.api.apis
-      unless _.isString(api.path)
-        throw new Error("Resource #{resource.api.resourcePath} has an api without path - D\'oh'") 
-      
-      for operation in api.operations
-        # check mandatory informations
-        unless _.isString(operation.httpMethod)
-          throw new Error("Api #{api.path} has an operation without http method - what is the police doing ?")
-        
-        verb = operation.httpMethod.toLowerCase()
-        unless verb in ['get', 'post', 'delete', 'put', 'options', 'head']
-          throw new Error("Api #{api.path} operation #{operation.httpMethod} is not supported - I\'m so sorry Janice") 
+        for operation in api.operations
+          # check mandatory informations
+          unless _.isString(operation.httpMethod)
+            throw new Error("Api #{api.path} has an operation without http method - what is the police doing ?")
           
-        unless _.isString(operation.nickname)
-          throw new Error("Api #{api.path} operation #{operation.httpMethod} does not specify a nickname - we cannot guess the corresponding controller method")
-        
-        # Validates parameters
-        if _.isArray(operation.parameters)
-          # parameter validations
-          validateParameters(operation.parameters, descriptor.models, api.path, operation.httpMethod)
-        
-        route = utils.pathToRoute(api.path)
-        unless operation.nickname of resource.controller
-          throw new Error("Api #{api.path} nickname #{operation.nickname} cannot be found in controller")
-        
-        # load the relevant script that must contain the middelware
-        routes.push({method:verb, path:route, middleware: resource.controller[operation.nickname]})
-        if /swagger/.test process.env?.NODE_DEBUG
-          console.log("found a route #{route} with verb #{verb} bound to exported method #{operation.nickname}")
+          verb = operation.httpMethod.toLowerCase()
+          unless verb in ['get', 'post', 'delete', 'put', 'options', 'head']
+            throw new Error("Api #{api.path} operation #{operation.httpMethod} is not supported - I\'m so sorry Janice") 
+            
+          unless _.isString(operation.nickname)
+            throw new Error("Api #{api.path} operation #{operation.httpMethod} does not specify a nickname - we cannot guess the corresponding controller method")
+          
+          # Validates parameters
+          if _.isArray(operation.parameters)
+            # parameter validations
+            validateParameters(operation.parameters, descriptor.models, api.path, operation.httpMethod)
+          
+          route = utils.pathToRoute(api.path)
+          unless operation.nickname of resource.controller
+            throw new Error("Api #{api.path} nickname #{operation.nickname} cannot be found in controller")
+          
+          # load the relevant script that must contain the middelware
+          routes.push({method:verb, path:route, middleware: resource.controller[operation.nickname]})
+          if /swagger/.test process.env?.NODE_DEBUG
+            console.log("found a route #{route} with verb #{verb} bound to exported method #{operation.nickname}")
 
     # enrich descriptor
     descriptor.apis.push(resource.api)
@@ -189,7 +192,6 @@ module.exports = (app, descriptor, resources, options = {}) ->
     app.descriptor = descriptor
    catch err
     throw new Error("Failed to create routes from resources: #{err.toString()}");
-  
 
   # Express middleware for serving the descRoute.
   return (req, res, next) ->

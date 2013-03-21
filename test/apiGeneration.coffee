@@ -31,7 +31,7 @@ describe 'API generation tests', ->
   it 'should fail if no api or controller provided for a resource', ->
     assert.throws ->
       swagger.generator express(), {}, [{}]
-    , /Resource must contain 'api' and 'controller' attributes/
+    , /Resource must contain 'api' attribute/
 
   it 'should fail on missing resource path', ->
     assert.throws ->
@@ -312,7 +312,7 @@ describe 'API generation tests', ->
     , /operation DELETE does not allowed body parameters/
 
   it 'should customize the generated descriptor path', (done) ->
-    # given a properlly 
+    # given a server with api and custom descriptor path
     app = express()
     app.use(express.cookieParser())
       .use(express.methodOverride())
@@ -328,16 +328,80 @@ describe 'API generation tests', ->
     server.listen port, host, _.defer((err) ->
       return done err if err?
       # when requesting the API description details
-      request.get
+      request.get(
         url: 'http://'+host+':'+port+'/my-desc'
         json: true
       , (err, res, body) ->
         return done err if err?
         # then a json file is returned
         assert.equal res.statusCode, 200
-        assert.deepEqual body, require './fixtures/streamApi.yml'
-      server.close()
-      done()
+        assert.deepEqual body, 
+          apiVersion: '1.0'
+          basePath: '/api'
+          apis: [
+            path: '/my-desc/stream'
+          ]
+          models: {} 
+        server.close()
+        done()
+      )
+    )
+
+  it 'should allow wired and not wired resources', (done) ->
+    # given a server with wired and not wired api
+    app = express()
+    app.use(express.cookieParser())
+      .use(express.methodOverride())
+      .use(express.bodyParser())
+      .use(swagger.generator(app, 
+        apiVersion: '1.0',
+        basePath: root
+      , [
+        api: require './fixtures/streamApi.yml'
+        controller: stat: (req, res) -> res.json status: 'passed'
+      ,
+        api: require './fixtures/notwired.yml'
+      ]))
+    server = http.createServer app
+    server.listen port, host, _.defer((err) ->
+      return done err if err?
+      # when requesting the API description details
+      request.get(
+        url: 'http://'+host+':'+port+'/api-docs.json'
+        json: true
+      , (err, res, body) ->
+        return done err if err?
+        # then a json file is returned
+        assert.equal res.statusCode, 200
+        assert.deepEqual body, 
+          apiVersion: '1.0'
+          basePath: '/api'
+          apis: [
+            path: '/api-docs.json/stream'
+          ,
+            path: '/api-docs.json/source'
+          ]
+          models: {} 
+        # then the unwired resource details are available 
+        request.get(
+          url: 'http://'+host+':'+port+'/api-docs.json/source'
+          json: true
+        , (err, res, body) ->
+          return done err if err?
+          assert.deepEqual body,
+            apiVersion: '1.0'
+            basePath: '/api'
+            apis: [ 
+              path: '/source/stats'
+              operations: [
+                httpMethod: 'GET'
+              ]
+            ],
+            resourcePath: '/source'
+          server.close()
+          done()
+        )
+      )
     )
 
   describe 'given a configured server with complex models', ->
