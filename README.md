@@ -152,9 +152,6 @@ For example:
   }]))
 ```
 
-  .
-```
-
 Input validation errors are reported the same way.
 
 You may not use the error middleware and provide your own.
