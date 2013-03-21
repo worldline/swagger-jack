@@ -1,9 +1,6 @@
 _ = require('underscore')
 utils = require('./utils')
 
-descRoute = /\/api-docs.json(\/.*)?/
-descPath = '/api-docs.json'
-
 # Validates the specification of a given parameters
 #
 # @param parameters [Array] list of existing parameters.
@@ -135,7 +132,8 @@ addRoutes = (descriptor, resources) ->
         
         # load the relevant script that must contain the middelware
         routes.push({method:verb, path:route, middleware: resource.controller[operation.nickname]})
-        #console.log("found a route #{route} with verb #{verb} bound to exported method #{operation.nickname}")
+        if /swagger/.test process.env?.NODE_DEBUG
+          console.log("found a route #{route} with verb #{verb} bound to exported method #{operation.nickname}")
 
     # enrich descriptor
     descriptor.apis.push(resource.api)
@@ -145,6 +143,7 @@ addRoutes = (descriptor, resources) ->
 # Generator function.
 # Will respond to `/api-docs.json` and return a Swagger compliant json description of the current API.
 # For each single resource inside the API, will also respond to `/api-docs.json/name` (where name is the resource's name).
+# Path to descriptor is configured by default to `/api-docs.json` but can be also parametrized
 #
 # The provided descriptor is the root attributes of the swagger descriptor, for example:
 #   "apiVersion":"0.2",
@@ -159,7 +158,9 @@ addRoutes = (descriptor, resources) ->
 # @option resources api [Object] the swagger descriptor for this resource. Operations nicknames must refer to controller's exported method.
 # @option resources controller [Object] controller's code, registered inside Express as routes. Nicknames refer to the controller properties.
 # @option resources model [Object] TODO
-module.exports = (app, descriptor, resources) ->
+# @param options [Object] generator options. May contains:
+# @option options descPath [String] path to generated descriptor file. Must contain leading slash. Default to `/api-docs.json`
+module.exports = (app, descriptor, resources, options = {}) ->
   # validates inputs
   unless app?.handle? and app?.set?
     throw new Error('No Express application provided')
@@ -169,13 +170,17 @@ module.exports = (app, descriptor, resources) ->
   
   unless _.isArray(resources)
     throw new Error('Provided resources must be an array')
+
+  options.descPath or= '/api-docs.json'
+
+  descRoute = new RegExp("#{options.descPath}(/.*)?")
   
   try
     # enrich the descriptor with apis
     routes = addRoutes(descriptor, resources)
     # Creates middlewares, after a slight delay to let the router being registered
     # Otherwise, the generator middleware will be registered after the added routes
-    _.defer( () ->
+    _.defer(() ->
       for route in routes
         app[route.method](route.path, route.middleware)
     )
@@ -204,7 +209,7 @@ module.exports = (app, descriptor, resources) ->
         # just the root
         result.apis = _.map(result.apis, (api) -> 
           return {
-            path: descPath+api.resourcePath
+            path: options.descPath+api.resourcePath
             description: api.description
           })
       

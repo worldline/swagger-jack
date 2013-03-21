@@ -15,6 +15,7 @@ It provides:
 2. _validate_ all the API inputs (query parameter, headers, bodies...)
 3. report _errors_ in a consistent way
 
+
 ## How can I use it ?
 
 First, get the module, by referencing it inside your package.json:
@@ -75,17 +76,35 @@ Then, when creating your Express application, import and configure the two middl
 
 ```
 
+
 ### Generator middleware
-Generator takes a general descriptor path (which is totally not constraint: put whatever you need in it), and an array of "resources".
 
-A "resource" is composed by a resource descriptor, and the corresponding code.
+Generator takes the following parameters:
 
-The middleware will automatically add to your express application the routes found inside the descriptor, and bound them to the provided controller (it uses the `nickname` attribute). In this example, two routes are created:
+1. your express application,
+1. a general descriptor object (which is totally not constraint: put whatever you need in it), 
+1. an array of "resources",
+1. optionnal `options` (see below)
+
+A "resource" is composed by a *resource* descriptor, and the corresponding code (what we called *controller*).
+
+The middleware will automatically add to your express application the routes found inside the *resource* descriptor, and bound them to the provided *controller* (it uses the `nickname` attribute from the descriptor to bound the right controller's method).
+
+In the previous example, two routes are created:
 
 1. `POST /api/user/` to create a user (controller method `create()`)
 1. `GET /api/user/` to list existing users (controller method `list()`)
 
-You can still register routes and middleware within your application, but they will not be documented nor validated. 
+If you just want to document some existing routes, just provide a resource descriptor, and no associated controller. 
+Of course, no validation will be provided.
+
+You can still register routes and middleware within your application, like you've used to. 
+But they will not be documented nor validated.
+
+The following options are available:
+
+- descPath `String`: path of generated swagger descriptor. Must contain leading slash. Default to `/api-docs.json`
+
 
 ### Validator middleware
 
@@ -95,11 +114,18 @@ It will handle parameter casting, range validation and declared model compliance
 All casted values (except body parameters) are available inside the controller methods with the `req.input` associative array.
 No matter if parameter is from path, query or header: it will be present inside `req.input`.
 
-But you can still use the Express original function (beware: values are just strings).
+You can still use the Express original function (`req.params`, `req.param()`, `req.headers`...), but beware: values are just strings.
 
-Body is just validated, as it was already parsed into json by the `express.bodyParser` middleware.
+
+Bodies are also validated, but parsing is done by express's bodyParser middleware: it takes in account json and multipart bodies. For other bodies kind, validator will read itself the body, and perfoms casting.
+
+**Caution** You *must* use `express.bodyParser()` *before* `swagger.validator`. 
+
+**Caution** You *can't* read the body by yourself (with `data`/`end` request events) for routes declared with Swagger-jack. 
+
 
 If you do not need validation, no problem: just remove the validator middleware.
+
 
 ### Error middleware
 
@@ -130,6 +156,7 @@ Input validation errors are reported the same way.
 
 You may not use the error middleware and provide your own.
 
+
 ### Power-tip !
 
 Use js-yaml to store your descriptor in a separate file, and split your code into other controller modules:
@@ -157,9 +184,11 @@ Use js-yaml to store your descriptor in a separate file, and split your code int
   app.listen(8080);
 ```
 
+
 ## TODO How does it works ?
 
 To be Done
+
 
 ## What about [swagger-node-express](https://github.com/wordnik/swagger-node-express) ?
 
@@ -184,6 +213,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 
 --------
 ### Addendum: what's with that name ?

@@ -311,6 +311,35 @@ describe 'API generation tests', ->
       ]
     , /operation DELETE does not allowed body parameters/
 
+  it 'should customize the generated descriptor path', (done) ->
+    # given a properlly 
+    app = express()
+    app.use(express.cookieParser())
+      .use(express.methodOverride())
+      .use(express.bodyParser())
+      .use(swagger.generator(app, 
+        apiVersion: '1.0',
+        basePath: root
+      , [
+        api: require './fixtures/streamApi.yml'
+        controller: stat: (req, res) -> res.json status: 'passed'
+      ], descPath: '/my-desc'))
+    server = http.createServer app
+    server.listen port, host, _.defer((err) ->
+      return done err if err?
+      # when requesting the API description details
+      request.get
+        url: 'http://'+host+':'+port+'/my-desc'
+        json: true
+      , (err, res, body) ->
+        return done err if err?
+        # then a json file is returned
+        assert.equal res.statusCode, 200
+        assert.deepEqual body, require './fixtures/streamApi.yml'
+      server.close()
+      done()
+    )
+
   describe 'given a configured server with complex models', ->
     app = null
 
@@ -330,7 +359,7 @@ describe 'API generation tests', ->
         # use validator also because it manipulates models
         .use(swagger.validator(app))
       server = http.createServer app
-      server.listen port, host, done
+      server.listen port, host, _.defer(done)
 
     after (done) ->
       server.close()
@@ -413,7 +442,7 @@ describe 'API generation tests', ->
         return done err.stack
 
       server = http.createServer app
-      server.listen port, host, done
+      server.listen port, host, _.defer(done)
 
     after (done) ->
       server.close()

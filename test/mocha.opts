@@ -1,0 +1,3 @@
+--bail
+--compilers coffee:coffee-script
+--reporter progress

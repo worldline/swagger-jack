@@ -130,7 +130,7 @@ describe 'API validation tests', ->
       app.get "#{root}/unvalidated", (req, res) -> res.json status:'passed'
 
       server = http.createServer app
-      server.listen port, host, done
+      server.listen port, host, _.defer(done)
 
     after (done) ->
       server.close()
