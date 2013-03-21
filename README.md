@@ -68,12 +68,11 @@ Then, when creating your Express application, import and configure the two middl
     }])
     .use(swagger.validator(app))
     .use(swagger.errorHandler())
-
+  
   app.get "/api/unvalidated", function(req, res, next) {
     // not documented not validated
   }
   app.listen(8080);
-
 ```
 
 
@@ -121,8 +120,7 @@ Bodies are also validated, but parsing is done by express's bodyParser middlewar
 
 **Caution** You *must* use `express.bodyParser()` *before* `swagger.validator`. 
 
-**Caution** You *can't* read the body by yourself (with `data`/`end` request events) for routes declared with Swagger-jack. 
-
+**Caution** You *can't* read the body by yourself (with *data*/*end* request events) for routes declared with `swagger.validator`. 
 
 If you do not need validation, no problem: just remove the validator middleware.
 
@@ -135,23 +133,28 @@ It uses the express's error mecanism: invoke the next() method with an argument.
 Weither it's a string or an object, it will be serialized into a json response with an http status (500 by default).
 
 For example:
+
 ```js
-  .use(swagger.generator(app, 
-      { // general descriptor ... }
-      [{
-        api: // resource descriptor...
-        controller: {
-          create: function(req, res, next) {
-            if (// error check...) {
-              var err = new Error('forbidden !');
-              err.status = 403;
-              return next(err);
-            }
-            // process ...
-          }
+  use(swagger.generator(app, { 
+    // general descriptor ... 
+  }, [{
+    api: // resource descriptor...
+    controller: {
+      create: function(req, res, next) {
+        if (// error check...) {
+          var err = new Error('forbidden !');
+          err.status = 403;
+          return next(err);
         }
-      }])
+        // process ...
+      }
+    }
+  }]))
 ```
+
+  .
+```
+
 Input validation errors are reported the same way.
 
 You may not use the error middleware and provide your own.
@@ -160,11 +163,12 @@ You may not use the error middleware and provide your own.
 ### Power-tip !
 
 Use js-yaml to store your descriptor in a separate file, and split your code into other controller modules:
+
 ```js
   var express = require('express'),
       swagger = require('swagger-jack'),
       yaml = require('js-yaml');
-
+  
   var app = express();
   
   app.use(express.bodyParser())
@@ -180,7 +184,7 @@ Use js-yaml to store your descriptor in a separate file, and split your code int
       }])
     .use(swagger.validator(app))
     .use(swagger.errorHandler())
-
+  
   app.listen(8080);
 ```
 
