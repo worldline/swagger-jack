@@ -47,10 +47,69 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [{}]
-        ,
         controller: require './fixtures/sourceCrud'
       ]
     , /api without path/
+
+  it 'should fail on model without id', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [path: '/test/1'],
+          models: Response: {}
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /Response not declared with the same id/
+
+  it 'should fail on model with invalid id', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [path: '/test/1'],
+          models: Response: id: 'Toto'
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /Response not declared with the same id/
+
+  it 'should fail on model with invalid id', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [path: '/test/1'],
+          models: Response1: id: 'Response1'
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /Response1 does not declares properties/
+
+  it 'should fail on model already defined', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [path: '/test/1'],
+          models: 
+            Response2: 
+              id: 'Response2'
+              properties: 
+                name: 
+                  type: 'String'
+        controller: require './fixtures/sourceCrud'
+      ,
+        api:
+          resourcePath: '/test2'
+          apis: [path: '/test2/1'],
+          models: 
+            Response2: 
+              id: 'Response2' 
+              properties: 
+                name: 
+                  type: 'String'
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /Response2 has already been defined/
 
   it 'should fail on unsupported operation in descriptor', ->
     assert.throws ->

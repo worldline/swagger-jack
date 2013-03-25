@@ -70,7 +70,14 @@ validateParameters = (parameters, models, path, method) ->
 
 
 # Validates the specified model
-validateModel = (model, id) ->
+validateModel = (model, id, models) ->
+  # checks that model has an id
+  if model.id isnt id
+    throw new Error("model #{id} not declared with the same id") 
+  unless _.isObject(model.properties) and !_.isEmpty(model.properties)
+    throw new Error("model #{id} does not declares properties")
+  if models[id]?
+    throw new Error("model #{id} has already been defined")
   # TODO known references, no anonymous inner models
   return model
 
@@ -100,7 +107,7 @@ addRoutes = (descriptor, resources) ->
     # add models
     if _.isObject(resource.api.models)
       for id, model of resource.api.models
-        descriptor.models[id] = validateModel(model, id)
+        descriptor.models[id] = validateModel(model, id, descriptor.models)
 
     # allow api without controllers, but do not generate routes
     if _.isObject(resource.controller)
@@ -112,6 +119,7 @@ addRoutes = (descriptor, resources) ->
         unless _.isString(api.path)
           throw new Error("Resource #{resource.api.resourcePath} has an api without path - D\'oh'") 
         
+        continue unless _.isArray api.operations
         for operation in api.operations
           # check mandatory informations
           unless _.isString(operation.httpMethod)
