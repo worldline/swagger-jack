@@ -260,6 +260,10 @@ validate = (req, path, specs, next) ->
     )
 
   return process() if req.is('json') or req.is('application/x-www-form-urlencoded') or req.is('multipart/form-data')
+
+  # do not try body parsing if there is no body to parse
+  return process() if req.method in ['GET', 'DELETE']
+
   # body parsing, if incoming request is not json, multipart or form-urlencoded
   # by default, no body
   delete req.body
