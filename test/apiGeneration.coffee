@@ -73,7 +73,7 @@ describe 'API generation tests', ->
       ]
     , /Response not declared with the same id/
 
-  it 'should fail on model with invalid id', ->
+  it 'should fail on model without properties', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api:
@@ -83,6 +83,42 @@ describe 'API generation tests', ->
         controller: require './fixtures/sourceCrud'
       ]
     , /Response1 does not declares properties/
+
+  it 'should not fail on model with properties', ->
+    swagger.generator express(), {}, [
+      api:
+        resourcePath: '/test'
+        apis: [path: '/test/1'],
+        models:
+          Response1:
+            id: 'Response1'
+            properties: name: type: 'string'
+      controller: require './fixtures/sourceCrud'
+    ]
+
+  it 'should not fail on model with additionalProperties', ->
+    swagger.generator express(), {}, [
+      api:
+        resourcePath: '/test'
+        apis: [path: '/test/1'],
+        models:
+          Response1:
+            id: 'Response1'
+            additionalProperties: type: 'string'
+      controller: require './fixtures/sourceCrud'
+    ]
+
+  it 'should not fail on model with items', ->
+    swagger.generator express(), {}, [
+      api:
+        resourcePath: '/test'
+        apis: [path: '/test/1'],
+        models:
+          Response1:
+            id: 'Response1'
+            items: type: 'string'
+      controller: require './fixtures/sourceCrud'
+    ]
 
   it 'should fail on model already defined', ->
     assert.throws ->
