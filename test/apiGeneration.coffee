@@ -456,6 +456,7 @@ describe 'API generation tests', ->
                 httpMethod: 'GET'
               ]
             ],
+            models: {},
             resourcePath: '/source'
           server.close()
           done()
@@ -475,10 +476,13 @@ describe 'API generation tests', ->
         .use(swagger.generator(app, 
           apiVersion: '1.0',
           basePath: root
-        , [
+        , [{
+          api: require './fixtures/addressApi.yml'
+          controller: passed: (req, res) -> res.json status: 'passed'
+        },{
           api: require './fixtures/complexApi.yml'
           controller: passed: (req, res) -> res.json status: 'passed'
-        ]))
+        }]))
         # use validator also because it manipulates models
         .use(swagger.validator(app))
       server = http.createServer app
@@ -491,7 +495,7 @@ describe 'API generation tests', ->
     it 'should reference models be untouched', (done) ->
       # when requesting the API description details
       request.get
-        url: 'http://'+host+':'+port+'/api-docs.json/example'
+        url: 'http://'+host+':'+port+'/api-docs.json/address'
         json: true
       , (err, res, body) ->
         return done err if err?
@@ -500,14 +504,14 @@ describe 'API generation tests', ->
         assert.deepEqual body,
           apiVersion: '1.0'
           basePath: '/api'
-          resourcePath: '/example'
+          resourcePath: '/address'
           apis: [
-            path: '/example'
+            path: '/address'
             operations: [
               httpMethod: 'POST'
               nickname: 'passed'
               parameters: [
-                dataType: 'User'
+                dataType: 'Address'
                 paramType: 'body'
                 required: true
               ]
@@ -524,18 +528,11 @@ describe 'API generation tests', ->
                 city:
                   type: 'string'
 
-            User:
-              id: 'User'
+            SomethingElse:
+              id: 'SomethingElse'
               properties:
-                id:
-                  type: 'int'
-                  required: true
                 name:
                   type: 'string'
-                addresses:
-                  type: 'array'
-                  items: 
-                    $ref: 'Address'
         done()
 
   describe 'given a properly configured and started server', ->
@@ -682,4 +679,5 @@ describe 'API generation tests', ->
                 nickname: 'remove'
               ]
             ]
+            models: {}
           done()
