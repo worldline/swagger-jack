@@ -456,6 +456,7 @@ describe 'API generation tests', ->
                 httpMethod: 'GET'
               ]
             ],
+            models: {},
             resourcePath: '/source'
           server.close()
           done()
@@ -682,4 +683,5 @@ describe 'API generation tests', ->
                 nickname: 'remove'
               ]
             ]
+            models: {}
           done()
