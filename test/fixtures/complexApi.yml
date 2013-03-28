@@ -6,6 +6,7 @@ apis:
 
   - httpMethod: POST
     nickname: passed
+    responseClass: SomethingElse
     parameters:
 
     - dataType: User
@@ -13,16 +14,6 @@ apis:
       required: true
 
 models:
-
-  Address:
-    id: Address
-    properties:
-      zipcode:
-        type: long
-      street:
-        type: string
-      city:
-        type: string
 
   User:
     id: User
