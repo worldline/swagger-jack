@@ -104,7 +104,7 @@ describe 'API generation tests', ->
         models:
           Response1:
             id: 'Response1'
-            additionalProperties: type: 'string'
+            additionalProperties: {}
       controller: require './fixtures/sourceCrud'
     ]
 
