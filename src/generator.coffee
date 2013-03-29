@@ -140,7 +140,7 @@ addRoutes = (descriptor, resources) ->
           # make sure the responseClass model is defined
           if operation.responseClass
             resource.api.models[operation.responseClass] or= descriptor.models[operation.responseClass]
-            unless resource.api.models[operation.responseClass]
+            unless resource.api.models[operation.responseClass]?
               throw new Error("responseClass #{operation.responseClass} doesn't match a model")
 
           # Validates parameters

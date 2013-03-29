@@ -203,6 +203,47 @@ To me it's very handy for a start, but has three problems:
 3. it does not use the descriptor to automatize input validation, and you still have to cast and check your parameters
 
 
+## Changelog
+
+### 1.4.2
+
+- only expose relevant models inside the swagger descriptor for a given resource ([details](https://github.com/feugy/swagger-jack/pull/9))
+
+### 1.4.1
+
+- check model id unicity to avoid erasure
+- allow apis to contain unwired resources. Allow to document handy-managed routes
+
+### 1.4.0
+
+- use CakeFile for better build/test portability
+- enhance documentation
+- allow swagger descriptor path customization ([details](https://github.com/feugy/swagger-jack/issues/6))
+6++
+### 1.3.1
+
+- fix when req.body is undefined ([details](https://github.com/feugy/swagger-jack/pull/4))
+
+### 1.3.0
+
+- allow anonymous complex bodies to have multiple occurences 
+
+### 1.2.0
+
+- allow body parameter to be facultative
+- fix packaging issues with coffee. Only contributors need to install it globally (as well as mocha)
+
+### 1.1.0
+
+- be more strict regarding multipart management 
+
+### 1.0.1
+
+- add some test on multipart/related body parsing 
+- enhance documentation
+- use [Travis CI](https://travis-ci.org/feugy/swagger-jack)
+
+
 ## License (MIT)
 
 Swagger is shipped with an MIT Licence. 
