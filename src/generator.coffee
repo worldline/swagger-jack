@@ -58,6 +58,11 @@ validateParameters = (parameters, models, path, method) ->
         # only on put an post
         unless method?.toLowerCase() in ['put', 'post']
           throw new Error("#{errorPrefix} does not allowed body parameters - do you really knows http ?")
+
+        # only known dataType
+        allowedDataTypes = ['byte', 'boolean', 'int', 'long', 'float', 'double', 'string', 'date', 'file']
+        unless parameter.dataType?.toLowerCase() in allowedDataTypes or models[parameter.dataType]
+          throw new Error("'#{parameter.dataType}' does not match an allowed dataType [#{allowedDataTypes}] nor a known model [#{Object.keys(models)}]")
       when 'header', 'query'
         # nothing to check
       else
@@ -105,9 +110,9 @@ addRoutes = (descriptor, resources) ->
       throw new Error("Resource must contain 'api' attribute")
 
     # add models
-    if _.isObject(resource.api.models)
-      for id, model of resource.api.models
-        descriptor.models[id] = validateModel(model, id, descriptor.models)
+    resource.api.models or= {}
+    for id, model of resource.api.models
+      descriptor.models[id] = validateModel(model, id, descriptor.models)
 
     # allow api without controllers, but do not generate routes
     if _.isObject(resource.controller)
@@ -132,10 +137,21 @@ addRoutes = (descriptor, resources) ->
           unless _.isString(operation.nickname)
             throw new Error("Api #{api.path} operation #{operation.httpMethod} does not specify a nickname - we cannot guess the corresponding controller method")
           
+          # make sure the responseClass model is defined
+          if operation.responseClass
+            resource.api.models[operation.responseClass] or= descriptor.models[operation.responseClass]
+            unless resource.api.models[operation.responseClass]
+              throw new Error("responseClass #{operation.responseClass} doesn't match a model")
+
           # Validates parameters
           if _.isArray(operation.parameters)
             # parameter validations
             validateParameters(operation.parameters, descriptor.models, api.path, operation.httpMethod)
+
+            # make sure the dataType model is defined
+            for parameter in operation.parameters
+              if parameter.dataType
+                resource.api.models[parameter.dataType] or= descriptor.models[parameter.dataType]
           
           route = utils.pathToRoute(api.path)
           unless operation.nickname of resource.controller
@@ -199,7 +215,9 @@ module.exports = (app, descriptor, resources, options = {}) ->
     # Add descriptor to express application for other middlewares
     app.descriptor = descriptor
    catch err
-    throw new Error("Failed to create routes from resources: #{err.toString()}");
+     err2 = new Error("Failed to create routes from resources: #{err.toString()}")
+     err2.stack = err.stack
+     throw err2;
 
   # Express middleware for serving the descRoute.
   return (req, res, next) ->

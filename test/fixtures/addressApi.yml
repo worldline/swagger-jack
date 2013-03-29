@@ -1,0 +1,31 @@
+resourcePath: /address
+apis: 
+
+- path: /address
+  operations:
+
+  - httpMethod: POST
+    nickname: passed
+    parameters:
+
+    - dataType: Address
+      paramType: body
+      required: true
+
+models:
+
+  Address:
+    id: Address
+    properties:
+      zipcode:
+        type: long
+      street:
+        type: string
+      city:
+        type: string
+
+  SomethingElse:
+    id: SomethingElse
+    properties:
+      name:
+        type: string
