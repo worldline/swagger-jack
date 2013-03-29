@@ -208,6 +208,7 @@ To me it's very handy for a start, but has three problems:
 ### 1.4.2
 
 - only expose relevant models inside the swagger descriptor for a given resource ([details](https://github.com/feugy/swagger-jack/pull/9))
+- be less restrictive on model content ([details](https://github.com/feugy/swagger-jack/pull/8))
 
 ### 1.4.1
 
@@ -219,7 +220,7 @@ To me it's very handy for a start, but has three problems:
 - use CakeFile for better build/test portability
 - enhance documentation
 - allow swagger descriptor path customization ([details](https://github.com/feugy/swagger-jack/issues/6))
-6++
+
 ### 1.3.1
 
 - fix when req.body is undefined ([details](https://github.com/feugy/swagger-jack/pull/4))
