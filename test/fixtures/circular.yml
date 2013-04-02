@@ -6,6 +6,7 @@ apis:
 
   - httpMethod: POST
     nickname: returnBody
+    responseClass: void
     parameters:
 
     - name: user

@@ -126,22 +126,22 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [path: '/test/1'],
-          models: 
-            Response2: 
+          models:
+            Response2:
               id: 'Response2'
-              properties: 
-                name: 
+              properties:
+                name:
                   type: 'String'
         controller: require './fixtures/sourceCrud'
       ,
         api:
           resourcePath: '/test2'
           apis: [path: '/test2/1'],
-          models: 
-            Response2: 
-              id: 'Response2' 
-              properties: 
-                name: 
+          models:
+            Response2:
+              id: 'Response2'
+              properties:
+                name:
                   type: 'String'
         controller: require './fixtures/sourceCrud'
       ]
@@ -163,7 +163,23 @@ describe 'API generation tests', ->
       ]
     , /operation TOTO is not supported/
 
-  it 'should fail on unknown nickname in descriptor', ->
+  it 'should fail on unsupported operation in descriptor', ->
+    assert.throws ->
+      swagger.generator express(), {}, [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/'
+            operations: [
+              httpMethod: 'TOTO'
+              nickname: 'doNotExist'
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /operation TOTO is not supported/
+
+  it 'should fail on missing responseClass', ->
     assert.throws ->
       swagger.generator express(), {}, [
         api:
@@ -177,7 +193,7 @@ describe 'API generation tests', ->
           ]
         controller: require './fixtures/sourceCrud'
       ]
-    , /nickname doNotExist cannot be found in controller/
+    , /responseClass is mandatory. If no result expected, responseClass should be void/
 
   it 'should fail on missing nickname in descriptor', ->
     assert.throws ->
@@ -186,6 +202,7 @@ describe 'API generation tests', ->
           resourcePath: '/test'
           apis: [
             path: '/'
+            responseClass: 'void'
             operations: [
               httpMethod: 'GET'
             ]
@@ -203,6 +220,7 @@ describe 'API generation tests', ->
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -232,6 +250,7 @@ describe 'API generation tests', ->
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 paramType: 'query'
@@ -251,6 +270,7 @@ describe 'API generation tests', ->
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -270,6 +290,7 @@ describe 'API generation tests', ->
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -290,6 +311,7 @@ describe 'API generation tests', ->
             path: '/{p1}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -311,6 +333,7 @@ describe 'API generation tests', ->
             path: '/{p1}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -332,6 +355,7 @@ describe 'API generation tests', ->
             path: '/{p1}/{p2}/{p3}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -352,6 +376,7 @@ describe 'API generation tests', ->
             path: '/{p1}/{p2}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -375,6 +400,7 @@ describe 'API generation tests', ->
             path: '/test'
             operations: [
               httpMethod: 'POST'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 paramType: 'body'
@@ -396,6 +422,7 @@ describe 'API generation tests', ->
             path: '/test'
             operations: [
               httpMethod: 'DELETE'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 paramType: 'body'
@@ -412,7 +439,7 @@ describe 'API generation tests', ->
     app.use(express.cookieParser())
       .use(express.methodOverride())
       .use(express.bodyParser())
-      .use(swagger.generator(app, 
+      .use(swagger.generator(app,
         apiVersion: '1.0',
         basePath: root
       , [
@@ -430,13 +457,13 @@ describe 'API generation tests', ->
         return done err if err?
         # then a json file is returned
         assert.equal res.statusCode, 200
-        assert.deepEqual body, 
+        assert.deepEqual body,
           apiVersion: '1.0'
           basePath: '/api'
           apis: [
             path: '/my-desc/stream'
           ]
-          models: {} 
+          models: {}
         server.close()
         done()
       )
@@ -448,7 +475,7 @@ describe 'API generation tests', ->
     app.use(express.cookieParser())
       .use(express.methodOverride())
       .use(express.bodyParser())
-      .use(swagger.generator(app, 
+      .use(swagger.generator(app,
         apiVersion: '1.0',
         basePath: root
       , [
@@ -468,7 +495,7 @@ describe 'API generation tests', ->
         return done err if err?
         # then a json file is returned
         assert.equal res.statusCode, 200
-        assert.deepEqual body, 
+        assert.deepEqual body,
           apiVersion: '1.0'
           basePath: '/api'
           apis: [
@@ -476,8 +503,8 @@ describe 'API generation tests', ->
           ,
             path: '/api-docs.json/source'
           ]
-          models: {} 
-        # then the unwired resource details are available 
+          models: {}
+        # then the unwired resource details are available
         request.get(
           url: 'http://'+host+':'+port+'/api-docs.json/source'
           json: true
@@ -486,10 +513,11 @@ describe 'API generation tests', ->
           assert.deepEqual body,
             apiVersion: '1.0'
             basePath: '/api'
-            apis: [ 
+            apis: [
               path: '/source/stats'
               operations: [
                 httpMethod: 'GET'
+                responseClass: 'void'
               ]
             ],
             models: {},
@@ -509,7 +537,7 @@ describe 'API generation tests', ->
       app.use(express.cookieParser())
         .use(express.methodOverride())
         .use(express.bodyParser())
-        .use(swagger.generator(app, 
+        .use(swagger.generator(app,
           apiVersion: '1.0',
           basePath: root
         , [{
@@ -545,6 +573,7 @@ describe 'API generation tests', ->
             path: '/address'
             operations: [
               httpMethod: 'POST'
+              responseClass: 'Address'
               nickname: 'passed'
               parameters: [
                 dataType: 'Address'
@@ -553,7 +582,7 @@ describe 'API generation tests', ->
               ]
             ]
           ],
-          models: 
+          models:
             Address:
               id: 'Address'
               properties:
@@ -582,7 +611,7 @@ describe 'API generation tests', ->
         app.use(express.cookieParser())
           .use(express.methodOverride())
           .use(express.bodyParser())
-          .use(swagger.generator(app, 
+          .use(swagger.generator(app,
             apiVersion: '1.0',
             basePath: root
           , [
@@ -697,21 +726,26 @@ describe 'API generation tests', ->
               path: '/source'
               operations: [
                 httpMethod: 'GET'
+                responseClass: 'void'
                 nickname: 'list'
               ,
                 httpMethod: 'POST'
+                responseClass: 'void'
                 nickname: 'create'
               ]
             ,
               path: '/source/{id}'
               operations: [
                 httpMethod: 'GET'
+                responseClass: 'void'
                 nickname: 'getById'
               ,
                 httpMethod: 'PUT'
+                responseClass: 'void'
                 nickname: 'update'
               ,
                 httpMethod: 'DELETE'
+                responseClass: 'void'
                 nickname: 'remove'
               ]
             ]

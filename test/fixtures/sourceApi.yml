@@ -3,18 +3,23 @@ apis:
 - path: /source
   operations:
   - httpMethod: GET
+    responseClass: void
     nickname: list
 
   - httpMethod: POST
+    responseClass: void
     nickname: create
 
 - path: /source/{id}
   operations:
   - httpMethod: GET
+    responseClass: void
     nickname: getById
 
   - httpMethod: PUT
+    responseClass: void
     nickname: update
 
   - httpMethod: DELETE
+    responseClass: void
     nickname: remove
