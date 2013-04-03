@@ -32,7 +32,7 @@ convertType = (swaggerType, parameter, allowMultiple, models) ->
   type = null
   if allowMultiple
     type = 'array';
-  else 
+  else
     switch lowerType
       when 'int', 'long', 'integer' then type = 'integer'
       when 'float', 'double', 'number' then type = 'number'
@@ -100,11 +100,11 @@ convertModel = (models, model, _stack) ->
     else
       # convert primitive type
       prop.type = convertType(prop.type, null, false, models)
-  
+
   return result
 
 # Parse the descriptor to extract an associative array with known api routes (Express path used as key).
-# For a given route, an associative array of known methods (upper case Http method names as key) contains 
+# For a given route, an associative array of known methods (upper case Http method names as key) contains
 # the expected parameters and body (for PUT and POST methods), as an array of parameterSpec.
 # The descriptor content is supposed to have been previously validated by the generator middleware
 #
@@ -133,13 +133,13 @@ analyzeRoutes = (descriptor) ->
 
           if spec.name?
             schema.title = spec.name;
-          
+
           if spec.description?
             schema.description = spec.description;
-          
+
           if schema.type is 'object'
             _.extend(schema, convertModel(descriptor.models, if spec.properties then spec else descriptor.models[spec.dataType]))
-          
+
           # manager possible values interval
           if spec.allowableValues?.valueType?
             switch spec.allowableValues.valueType.toLowerCase()
@@ -186,7 +186,7 @@ validate = (req, path, specs, next) ->
       value = null
       errPrefix = null
 
-      switch spec.kind 
+      switch spec.kind
         when 'query'
           value = req.query[spec.name]
           errPrefix = "query parameter #{spec.name}"
@@ -194,7 +194,7 @@ validate = (req, path, specs, next) ->
           value = req.headers[spec.name]
           errPrefix = "header #{spec.name}"
         when 'path'
-          # extract the parameter value: 
+          # extract the parameter value:
           match = req.path.match(regex)
           value = match[pathParamsNames[spec.name]]
           if value
@@ -252,7 +252,7 @@ validate = (req, path, specs, next) ->
               req.body = value
         done(err)
       )
-    
+
     , (err) ->
       # if an error is found, use the 400 Http code (BAD_REQUEST)
       err?.status = 400
@@ -274,8 +274,8 @@ validate = (req, path, specs, next) ->
   return req.on('end', process)
 
 # Validator function.
-# Analyze the API descriptor to extract awaited parameters and bodiy
-# When the corresponding Api is executed, validates the incoming request against the expected parameters and body, 
+# Analyze the API descriptor to extract awaited parameters and body
+# When the corresponding Api is executed, validates the incoming request against the expected parameters and body,
 # and trigger comprehensive errors
 #
 # @param app [Object] the enriched Express application.

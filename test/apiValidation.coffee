@@ -64,11 +64,11 @@ multipartApi = (name, formdata, parts, status, expectedBody, done) ->
     multipart: []
     encoding: 'utf8'
   if formdata
-    req.headers = 
+    req.headers =
       'content-type': 'multipart/form-data'
   for part in parts
-    obj = 
-      body: part.body 
+    obj =
+      body: part.body
     obj['content-disposition'] = "form-data; name=\"#{part.name}\"" if part.name?
     req.multipart.push obj
 
@@ -101,7 +101,10 @@ describe 'API validation tests', ->
       # configured to use swagger generator
       app.use(express.bodyParser())
         .use(express.methodOverride())
-        .use(swagger.generator app, {}, [
+        .use(swagger.generator app,
+          apiVersion: '1.0'
+          basePath: root
+        , [
           api: require './fixtures/circular.yml'
           controller: returnBody: (req, res) -> res.json body:req.body
         ])
@@ -117,7 +120,10 @@ describe 'API validation tests', ->
       # configured to use swagger generator
       app.use(express.bodyParser())
         .use(express.methodOverride())
-        .use(swagger.generator app, {}, [
+        .use(swagger.generator app,
+          apiVersion: '1.0'
+          basePath: root
+        , [
           api: require './fixtures/validatedApi.yml'
           controller:
             passed: (req, res) -> res.json status: 'passed'
@@ -184,7 +190,7 @@ describe 'API validation tests', ->
             city: 'lyon'
             street: 'bd vivier merles'
             zipcode: 69006
-          ] 
+          ]
         getApi 'complexqueryparam', {user:JSON.stringify obj}, {}, 200, {user:obj}, done
 
     describe 'given an api accepting header parameters', ->
@@ -197,7 +203,7 @@ describe 'API validation tests', ->
         getApi 'headerparams', null, headers, 200, headers, done
 
       it 'should long and boolean be parsed', (done) ->
-        headers = 
+        headers =
           param1: -2
           param2: false
         getApi 'headerparams', null, headers, 200, headers, done
@@ -228,7 +234,7 @@ describe 'API validation tests', ->
             city: 'lyon'
             street: 'bd vivier merles'
             zipcode: 69006
-          ] 
+          ]
         getApi 'complexheaderparam', null, {user:JSON.stringify obj}, 200, {user:obj}, done
 
     describe 'given an api accepting path parameters', ->
@@ -274,19 +280,19 @@ describe 'API validation tests', ->
       it 'should multi-part/related body not be parsed', (done) ->
         multipartApi 'multiplebody', false, [
             name: 'param1'
-            body: '-5' 
+            body: '-5'
           ,
             name: 'param2'
-            body: 'false,true' 
+            body: 'false,true'
           ], 400, {message: 'body parameter param1 is required'}, done
 
       it 'should multi-part/form-data body be parsed and casted down', (done) ->
         multipartApi 'multiplebody', true, [
             name: 'param1'
-            body: '-5' 
+            body: '-5'
           ,
             name: 'param2'
-            body: 'false,true' 
+            body: 'false,true'
           ], 200, {body:{param1: -5, param2: [false, true]}}, done
 
       it 'should multi-part body parameter be optionnal', (done) ->
@@ -300,7 +306,7 @@ describe 'API validation tests', ->
             city: 'lyon'
             street: 'bd vivier merle'
             zipcode: 69006
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 200, {body:obj}, done
 
       it 'should multiple anonymous optionnal body accept one value', (done) ->
@@ -337,7 +343,7 @@ describe 'API validation tests', ->
           id: 11
           firstName: 'jean'
           lastName: 'dupond'
-          addresses: [] 
+          addresses: []
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'firstName' is not explicitly defined and therefore not allowed"}, done
 
       it 'should complex json body refs be checked', (done) ->
@@ -347,7 +353,7 @@ describe 'API validation tests', ->
           addresses: [
             ville: 'lyon',
             street: 'bd vivier merle'
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'addresses.[0].ville' is not explicitly defined and therefore not allowed"}, done
 
       it 'should range list value be checked', (done) ->
@@ -358,7 +364,7 @@ describe 'API validation tests', ->
             city: 'strasbourd'
             zipcode: 67000
             street: 'bd vivier merle'
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'addresses.[0].city' is not in enum"}, done
 
       it 'should range interval value be checked', (done) ->
@@ -369,7 +375,7 @@ describe 'API validation tests', ->
             city: 'lyon'
             zipcode: 100000
             street: 'bd vivier merle'
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'addresses.[0].zipcode' is 100000 when it should be at most 99999"}, done
 
       it 'should required attributes be checked', (done) ->
@@ -379,7 +385,7 @@ describe 'API validation tests', ->
             city: 'lyon'
             zipcode: 69003
             street: 'bd vivier merle'
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'id' is required"}, done
 
       it 'should primitive values be parsed', (done) ->
@@ -390,7 +396,7 @@ describe 'API validation tests', ->
             city: 'lyon'
             zipcode: 69003
             street: 'bd vivier merle'
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'id' is a boolean when it should be an integer"}, done
 
       it 'should additionnal attribute not be allowed', (done) ->
@@ -402,7 +408,7 @@ describe 'API validation tests', ->
             zipcode: 69003
             street: 'bd vivier merle'
             other: 'coucou'
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'addresses.[0].other' is not explicitly defined and therefore not allowed"}, done
 
       it 'should optionnal attribute be allowed', (done) ->
@@ -421,7 +427,7 @@ describe 'API validation tests', ->
             zipcode: 69003
             street: 'bd vivier merle'
             other: 'coucou'
-          ] 
+          ]
         postApi 'complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'stuff.name' is an integer when it should be a string"}, done
 
       it 'should classical json-schema specification be usabled', (done) ->
@@ -458,7 +464,7 @@ describe 'API validation tests', ->
       it 'should reject when passing file not in multipart', (done) ->
 
         file = pathUtils.join __dirname, 'fixtures/circular.yml'
-        postApi 'upload', {'Content-Type': 'application/json'}, JSON.stringify(file:file.toString()), 400, 
+        postApi 'upload', {'Content-Type': 'application/json'}, JSON.stringify(file:file.toString()), 400,
           {message: "body parameter file is required"}, done
 
       it 'should fail on missing body file', (done) ->

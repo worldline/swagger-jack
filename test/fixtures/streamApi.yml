@@ -4,3 +4,4 @@ apis:
   operations:
   - httpMethod: GET
     nickname: stat
+    responseClass: void

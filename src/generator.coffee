@@ -29,14 +29,14 @@ validateParameters = (parameters, models, path, method) ->
 
   if duplicates.length > 0
     throw new Error("#{errorPrefix} has duplicates parameters: #{duplicates.join(',')}")
-  
+
   # validates path parameter names and number
   pathParameters = _.filter(parameters, (p) -> return p?.paramType?.toLowerCase() is 'path')
   [__, routeParameters] = utils.extractParameters(utils.pathToRoute(path))
   routeParametersLength = _.keys(routeParameters).length
   if routeParametersLength isnt pathParameters.length
     throw new Error("#{errorPrefix} declares #{routeParametersLength} parameters in its path, and #{pathParameters.length} in its parameters array - you missed something")
-  for name of routeParameters 
+  for name of routeParameters
     unless _.find(pathParameters, (p) -> return p.name is name)?
       throw new Error("#{errorPrefix} declares parameter #{name} in its path, but not in its parameters array - propably a typo")
 
@@ -78,7 +78,7 @@ validateParameters = (parameters, models, path, method) ->
 validateModel = (model, id, models) ->
   # checks that model has an id
   if model.id isnt id
-    throw new Error("model #{id} not declared with the same id") 
+    throw new Error("model #{id} not declared with the same id")
   unless !_.isEmpty(model.properties) or model.additionalProperties or !_.isEmpty(model.items)
     throw new Error("model #{id} does not declares properties")
   if models[id]?
@@ -122,26 +122,29 @@ addRoutes = (descriptor, resources) ->
       # analyze each api within a given resource
       for api in resource.api.apis
         unless _.isString(api.path)
-          throw new Error("Resource #{resource.api.resourcePath} has an api without path - D\'oh'") 
-        
+          throw new Error("Resource #{resource.api.resourcePath} has an api without path - D\'oh'")
+
         continue unless _.isArray api.operations
         for operation in api.operations
           # check mandatory informations
           unless _.isString(operation.httpMethod)
             throw new Error("Api #{api.path} has an operation without http method - what is the police doing ?")
-          
+
           verb = operation.httpMethod.toLowerCase()
           unless verb in ['get', 'post', 'delete', 'put', 'options', 'head']
-            throw new Error("Api #{api.path} operation #{operation.httpMethod} is not supported - I\'m so sorry Janice") 
-            
+            throw new Error("Api #{api.path} operation #{operation.httpMethod} is not supported - I\'m so sorry Janice")
+
           unless _.isString(operation.nickname)
             throw new Error("Api #{api.path} operation #{operation.httpMethod} does not specify a nickname - we cannot guess the corresponding controller method")
-          
+
           # make sure the responseClass model is defined
           if operation.responseClass
-            resource.api.models[operation.responseClass] or= descriptor.models[operation.responseClass]
-            unless resource.api.models[operation.responseClass]?
-              throw new Error("responseClass #{operation.responseClass} doesn't match a model")
+            if operation.responseClass isnt "void"
+              resource.api.models[operation.responseClass] or= descriptor.models[operation.responseClass]
+              unless resource.api.models[operation.responseClass]?
+                throw new Error("responseClass #{operation.responseClass} doesn't match a model")
+          else
+            throw new Error("responseClass is mandatory. If no result expected, responseClass should be void")
 
           # Validates parameters
           if _.isArray(operation.parameters)
@@ -152,11 +155,11 @@ addRoutes = (descriptor, resources) ->
             for parameter in operation.parameters
               if parameter.dataType
                 resource.api.models[parameter.dataType] or= descriptor.models[parameter.dataType]
-          
+
           route = utils.pathToRoute(api.path)
           unless operation.nickname of resource.controller
             throw new Error("Api #{api.path} nickname #{operation.nickname} cannot be found in controller")
-          
+
           # load the relevant script that must contain the middelware
           routes.push({method:verb, path:route, middleware: resource.controller[operation.nickname]})
           if /swagger/.test process.env?.NODE_DEBUG
@@ -164,7 +167,7 @@ addRoutes = (descriptor, resources) ->
 
     # enrich descriptor
     descriptor.apis.push(resource.api)
-  
+
   return routes
 
 # Generator function.
@@ -176,7 +179,7 @@ addRoutes = (descriptor, resources) ->
 #   "apiVersion":"0.2",
 #   "basePath":"http:#mydomain.com/api"
 #
-# The following array contains descriptor and code for each resource. 
+# The following array contains descriptor and code for each resource.
 # A resource descriptor is analyzed and the corresponding routes are registered within the specified Express application.
 #
 # @param app [Object] the enriched Express application.
@@ -191,17 +194,27 @@ module.exports = (app, descriptor, resources, options = {}) ->
   # validates inputs
   unless app?.handle? and app?.set?
     throw new Error('No Express application provided')
-  
+
   unless _.isObject(descriptor)
     throw new Error('Provided root descriptor is not an object')
-  
+
   unless _.isArray(resources)
     throw new Error('Provided resources must be an array')
 
   options.descPath or= '/api-docs.json'
 
   descRoute = new RegExp("#{options.descPath}(/.*)?")
-  
+
+  # check mandatory descriptors
+  unless descriptor.swaggerVersion
+    descriptor.swaggerVersion = '1.1'
+
+  unless descriptor.basePath
+    throw new Error('basePath is mandatory')
+
+  unless descriptor.apiVersion
+    throw new Error('apiVersion is mandatory')
+
   try
     # enrich the descriptor with apis
     routes = addRoutes(descriptor, resources)
@@ -211,13 +224,13 @@ module.exports = (app, descriptor, resources, options = {}) ->
       for route in routes
         app[route.method](route.path, route.middleware)
     )
-      
+
     # Add descriptor to express application for other middlewares
     app.descriptor = descriptor
    catch err
      err2 = new Error("Failed to create routes from resources: #{err.toString()}")
      err2.stack = err.stack
-     throw err2;
+     throw err2
 
   # Express middleware for serving the descRoute.
   return (req, res, next) ->
@@ -229,18 +242,18 @@ module.exports = (app, descriptor, resources, options = {}) ->
         resource = _.find(descriptor.apis, (res) -> return match[1] is res.resourcePath)
         unless resource?
           return res.send(404)
-        
+
         result.resourcePath = resource.resourcePath
         result.apis = resource.apis
         result.models = resource.models
        else
         # just the root
-        result.apis = _.map(result.apis, (api) -> 
+        result.apis = _.map(result.apis, (api) ->
           return {
             path: options.descPath+api.resourcePath
             description: api.description
           })
-      
+
       return res.json(result)
-    
+
     next()
