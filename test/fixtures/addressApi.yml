@@ -6,6 +6,7 @@ apis:
 
   - httpMethod: POST
     nickname: passed
+    responseClass: Address
     parameters:
 
     - dataType: Address

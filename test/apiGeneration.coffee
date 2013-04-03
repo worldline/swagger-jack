@@ -30,12 +30,18 @@ describe 'API generation tests', ->
 
   it 'should fail if no api or controller provided for a resource', ->
     assert.throws ->
-      swagger.generator express(), {}, [{}]
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [{}]
     , /Resource must contain 'api' attribute/
 
   it 'should fail on missing resource path', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api: {}
         controller: require './fixtures/sourceCrud'
       ]
@@ -43,7 +49,10 @@ describe 'API generation tests', ->
 
   it 'should fail on missing api path', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [{}]
@@ -53,7 +62,10 @@ describe 'API generation tests', ->
 
   it 'should fail on model without id', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [path: '/test/1'],
@@ -64,7 +76,10 @@ describe 'API generation tests', ->
 
   it 'should fail on model with invalid id', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [path: '/test/1'],
@@ -75,7 +90,10 @@ describe 'API generation tests', ->
 
   it 'should fail on model without properties', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [path: '/test/1'],
@@ -85,7 +103,10 @@ describe 'API generation tests', ->
     , /Response1 does not declares properties/
 
   it 'should not fail on model with properties', ->
-    swagger.generator express(), {}, [
+    swagger.generator express(),
+      apiVersion: '1.0'
+      basePath: root
+    , [
       api:
         resourcePath: '/test'
         apis: [path: '/test/1'],
@@ -97,7 +118,10 @@ describe 'API generation tests', ->
     ]
 
   it 'should not fail on model with additionalProperties', ->
-    swagger.generator express(), {}, [
+    swagger.generator express(),
+      apiVersion: '1.0'
+      basePath: root
+    , [
       api:
         resourcePath: '/test'
         apis: [path: '/test/1'],
@@ -109,7 +133,10 @@ describe 'API generation tests', ->
     ]
 
   it 'should not fail on model with items', ->
-    swagger.generator express(), {}, [
+    swagger.generator express(),
+      apiVersion: '1.0'
+      basePath: root
+    , [
       api:
         resourcePath: '/test'
         apis: [path: '/test/1'],
@@ -122,26 +149,29 @@ describe 'API generation tests', ->
 
   it 'should fail on model already defined', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [path: '/test/1'],
-          models: 
-            Response2: 
+          models:
+            Response2:
               id: 'Response2'
-              properties: 
-                name: 
+              properties:
+                name:
                   type: 'String'
         controller: require './fixtures/sourceCrud'
       ,
         api:
           resourcePath: '/test2'
           apis: [path: '/test2/1'],
-          models: 
-            Response2: 
-              id: 'Response2' 
-              properties: 
-                name: 
+          models:
+            Response2:
+              id: 'Response2'
+              properties:
+                name:
                   type: 'String'
         controller: require './fixtures/sourceCrud'
       ]
@@ -149,7 +179,10 @@ describe 'API generation tests', ->
 
   it 'should fail on unsupported operation in descriptor', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
@@ -163,9 +196,30 @@ describe 'API generation tests', ->
       ]
     , /operation TOTO is not supported/
 
-  it 'should fail on unknown nickname in descriptor', ->
+  it 'should fail on unsupported operation in descriptor', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/'
+            operations: [
+              httpMethod: 'TOTO'
+              nickname: 'doNotExist'
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /operation TOTO is not supported/
+
+  it 'should fail on missing basePath', ->
+    assert.throws ->
+      swagger.generator express(),
+        apiVersion: '1.0'
+      , [
         api:
           resourcePath: '/test'
           apis: [
@@ -177,15 +231,56 @@ describe 'API generation tests', ->
           ]
         controller: require './fixtures/sourceCrud'
       ]
-    , /nickname doNotExist cannot be found in controller/
+    , /basePath is mandatory/
 
-  it 'should fail on missing nickname in descriptor', ->
+  it 'should fail on missing apiVersion', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'doNotExist'
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /apiVersion is mandatory/
+
+  it 'should fail on missing responseClass', ->
+    assert.throws ->
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'doNotExist'
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /responseClass is mandatory. If no result expected, responseClass should be void/
+
+  it 'should fail on missing nickname in descriptor', ->
+    assert.throws ->
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/'
+            responseClass: 'void'
             operations: [
               httpMethod: 'GET'
             ]
@@ -196,13 +291,17 @@ describe 'API generation tests', ->
 
   it 'should fail on duplicate parameters in descriptor', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -225,13 +324,17 @@ describe 'API generation tests', ->
 
   it 'should fail on parameter (not body) without name', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 paramType: 'query'
@@ -244,13 +347,17 @@ describe 'API generation tests', ->
 
   it 'should fail on parameter without paramType', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -263,13 +370,17 @@ describe 'API generation tests', ->
 
   it 'should fail on unknown type parameter', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -283,13 +394,17 @@ describe 'API generation tests', ->
 
   it 'should fail on optionnal path parameter', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/{p1}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -304,13 +419,17 @@ describe 'API generation tests', ->
 
   it 'should fail on path parameter with multiple values', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/{p1}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -325,13 +444,17 @@ describe 'API generation tests', ->
 
   it 'should fail on path parameter disclosure between path and parameter array', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/{p1}/{p2}/{p3}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -345,13 +468,17 @@ describe 'API generation tests', ->
 
   it 'should fail on path parameter name disclosure between path and parameter array', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/{p1}/{p2}'
             operations: [
               httpMethod: 'GET'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 name: 'p1'
@@ -368,13 +495,17 @@ describe 'API generation tests', ->
 
   it 'should fail on two anonymous body parameters', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/test'
             operations: [
               httpMethod: 'POST'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 paramType: 'body'
@@ -389,13 +520,17 @@ describe 'API generation tests', ->
 
   it 'should fail on body parameters for other than put and post', ->
     assert.throws ->
-      swagger.generator express(), {}, [
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
         api:
           resourcePath: '/test'
           apis: [
             path: '/test'
             operations: [
               httpMethod: 'DELETE'
+              responseClass: 'void'
               nickname: 'stat'
               parameters: [
                 paramType: 'body'
@@ -406,14 +541,47 @@ describe 'API generation tests', ->
       ]
     , /operation DELETE does not allowed body parameters/
 
+  it 'should preserve swaggerVersion', (done) ->
+    # given a server with api and custom descriptor path
+    app = express()
+    app.use(express.cookieParser())
+      .use(express.methodOverride())
+      .use(express.bodyParser())
+      .use(swagger.generator(app,
+        swaggerVersion: '1.0'
+        apiVersion: '1.0'
+        basePath: root
+      , []))
+    server = http.createServer app
+    server.listen port, host, _.defer((err) ->
+      return done err if err?
+      # when requesting the API description details
+      request.get(
+        url: 'http://'+host+':'+port+'/api-docs.json'
+        json: true
+      , (err, res, body) ->
+        return done err if err?
+        # then a json file is returned
+        assert.equal res.statusCode, 200
+        assert.deepEqual body,
+          apiVersion: '1.0'
+          basePath: '/api'
+          swaggerVersion: "1.0"
+          apis: []
+          models: {}
+        server.close()
+        done()
+      )
+    )
+
   it 'should customize the generated descriptor path', (done) ->
     # given a server with api and custom descriptor path
     app = express()
     app.use(express.cookieParser())
       .use(express.methodOverride())
       .use(express.bodyParser())
-      .use(swagger.generator(app, 
-        apiVersion: '1.0',
+      .use(swagger.generator(app,
+        apiVersion: '1.0'
         basePath: root
       , [
         api: require './fixtures/streamApi.yml'
@@ -430,13 +598,14 @@ describe 'API generation tests', ->
         return done err if err?
         # then a json file is returned
         assert.equal res.statusCode, 200
-        assert.deepEqual body, 
+        assert.deepEqual body,
           apiVersion: '1.0'
           basePath: '/api'
+          swaggerVersion: "1.1"
           apis: [
             path: '/my-desc/stream'
           ]
-          models: {} 
+          models: {}
         server.close()
         done()
       )
@@ -448,8 +617,8 @@ describe 'API generation tests', ->
     app.use(express.cookieParser())
       .use(express.methodOverride())
       .use(express.bodyParser())
-      .use(swagger.generator(app, 
-        apiVersion: '1.0',
+      .use(swagger.generator(app,
+        apiVersion: '1.0'
         basePath: root
       , [
         api: require './fixtures/streamApi.yml'
@@ -468,7 +637,8 @@ describe 'API generation tests', ->
         return done err if err?
         # then a json file is returned
         assert.equal res.statusCode, 200
-        assert.deepEqual body, 
+        assert.deepEqual body,
+          swaggerVersion: "1.1"
           apiVersion: '1.0'
           basePath: '/api'
           apis: [
@@ -476,20 +646,22 @@ describe 'API generation tests', ->
           ,
             path: '/api-docs.json/source'
           ]
-          models: {} 
-        # then the unwired resource details are available 
+          models: {}
+        # then the unwired resource details are available
         request.get(
           url: 'http://'+host+':'+port+'/api-docs.json/source'
           json: true
         , (err, res, body) ->
           return done err if err?
           assert.deepEqual body,
+            swaggerVersion: "1.1"
             apiVersion: '1.0'
             basePath: '/api'
-            apis: [ 
+            apis: [
               path: '/source/stats'
               operations: [
                 httpMethod: 'GET'
+                responseClass: 'void'
               ]
             ],
             models: {},
@@ -509,8 +681,8 @@ describe 'API generation tests', ->
       app.use(express.cookieParser())
         .use(express.methodOverride())
         .use(express.bodyParser())
-        .use(swagger.generator(app, 
-          apiVersion: '1.0',
+        .use(swagger.generator(app,
+          apiVersion: '1.0'
           basePath: root
         , [{
           api: require './fixtures/addressApi.yml'
@@ -538,6 +710,7 @@ describe 'API generation tests', ->
         # then a json file is returned
         assert.equal res.statusCode, 200
         assert.deepEqual body,
+          swaggerVersion: "1.1"
           apiVersion: '1.0'
           basePath: '/api'
           resourcePath: '/address'
@@ -545,6 +718,7 @@ describe 'API generation tests', ->
             path: '/address'
             operations: [
               httpMethod: 'POST'
+              responseClass: 'Address'
               nickname: 'passed'
               parameters: [
                 dataType: 'Address'
@@ -553,7 +727,7 @@ describe 'API generation tests', ->
               ]
             ]
           ],
-          models: 
+          models:
             Address:
               id: 'Address'
               properties:
@@ -582,8 +756,8 @@ describe 'API generation tests', ->
         app.use(express.cookieParser())
           .use(express.methodOverride())
           .use(express.bodyParser())
-          .use(swagger.generator(app, 
-            apiVersion: '1.0',
+          .use(swagger.generator(app,
+            apiVersion: '1.0'
             basePath: root
           , [
             api: require './fixtures/sourceApi.yml'
@@ -672,8 +846,9 @@ describe 'API generation tests', ->
         # then a json file is returned
         assert.equal res.statusCode, 200
         assert.deepEqual body,
-          apiVersion: '1.0',
-          basePath: '/api',
+          swaggerVersion: "1.1"
+          apiVersion: '1.0'
+          basePath: '/api'
           apis: [
             path:"/api-docs.json/source"
           ,
@@ -690,6 +865,7 @@ describe 'API generation tests', ->
           # then a json file is returned
           assert.equal res.statusCode, 200
           assert.deepEqual body,
+            swaggerVersion: "1.1"
             apiVersion: '1.0'
             basePath: '/api'
             resourcePath: '/source'
@@ -697,21 +873,26 @@ describe 'API generation tests', ->
               path: '/source'
               operations: [
                 httpMethod: 'GET'
+                responseClass: 'void'
                 nickname: 'list'
               ,
                 httpMethod: 'POST'
+                responseClass: 'void'
                 nickname: 'create'
               ]
             ,
               path: '/source/{id}'
               operations: [
                 httpMethod: 'GET'
+                responseClass: 'void'
                 nickname: 'getById'
               ,
                 httpMethod: 'PUT'
+                responseClass: 'void'
                 nickname: 'update'
               ,
                 httpMethod: 'DELETE'
+                responseClass: 'void'
                 nickname: 'remove'
               ]
             ]

@@ -4,11 +4,13 @@ apis:
 - path: /api/noparams/{id}
   operations:
   - httpMethod: GET
+    responseClass: void
     nickname: passed
 
 - path: /api/pathparams/{param1}/{param2}
   operations:
   - httpMethod: GET
+    responseClass: void
     nickname: returnParams
     parameters:
 
@@ -23,6 +25,7 @@ apis:
 - path: /api/queryparams
   operations:
   - httpMethod: GET
+    responseClass: void
     nickname: returnParams
     parameters:
 
@@ -43,6 +46,7 @@ apis:
 - path: /api/headerparams
   operations:
   - httpMethod: GET
+    responseClass: void
     nickname: returnParams
     parameters:
 
@@ -64,6 +68,7 @@ apis:
   operations:
 
   - httpMethod: POST
+    responseClass: void
     nickname: returnBody
     parameters:
 
@@ -75,6 +80,7 @@ apis:
   operations:
 
   - httpMethod: POST
+    responseClass: void
     nickname: returnBody
     parameters:
 
@@ -85,6 +91,7 @@ apis:
   operations:
 
   - httpMethod: POST
+    responseClass: void
     nickname: returnBody
     parameters:
 
@@ -103,6 +110,7 @@ apis:
   operations:
 
   - httpMethod: POST
+    responseClass: void
     nickname: returnBody
     parameters:
 
@@ -115,6 +123,7 @@ apis:
   operations:
 
   - httpMethod: POST
+    responseClass: void
     nickname: returnBody
     parameters:
 
@@ -126,6 +135,7 @@ apis:
   operations:
 
   - httpMethod: POST
+    responseClass: void
     nickname: returnBody
     parameters:
 
@@ -138,6 +148,7 @@ apis:
   operations:
 
   - httpMethod: GET
+    responseClass: void
     nickname: returnParams
     parameters:
 
@@ -150,6 +161,7 @@ apis:
   operations:
 
   - httpMethod: GET
+    responseClass: void
     nickname: returnParams
     parameters:
 
@@ -162,6 +174,7 @@ apis:
   operations:
 
     - httpMethod: POST
+      responseClass: void
       nickname: returnBody
       parameters:
 
@@ -173,6 +186,7 @@ apis:
   operations:
 
     - httpMethod: POST
+      responseClass: void
       nickname: returnBody
       parameters:
 
@@ -184,6 +198,7 @@ apis:
   operations:
 
     - httpMethod: POST
+      responseClass: void
       nickname: passed
       parameters:
       - name: file
