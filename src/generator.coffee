@@ -139,7 +139,7 @@ addRoutes = (descriptor, resources) ->
 
           # make sure the responseClass model is defined
           if operation.responseClass
-            if operation.responseClass != "void"
+            if operation.responseClass isnt "void"
               resource.api.models[operation.responseClass] or= descriptor.models[operation.responseClass]
               unless resource.api.models[operation.responseClass]?
                 throw new Error("responseClass #{operation.responseClass} doesn't match a model")
@@ -230,7 +230,7 @@ module.exports = (app, descriptor, resources, options = {}) ->
    catch err
      err2 = new Error("Failed to create routes from resources: #{err.toString()}")
      err2.stack = err.stack
-     throw err2;
+     throw err2
 
   # Express middleware for serving the descRoute.
   return (req, res, next) ->
