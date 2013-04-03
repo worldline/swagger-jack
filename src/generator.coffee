@@ -205,6 +205,16 @@ module.exports = (app, descriptor, resources, options = {}) ->
 
   descRoute = new RegExp("#{options.descPath}(/.*)?")
 
+  # check mandatory descriptors
+  unless descriptor.swaggerVersion
+    descriptor.swaggerVersion = '1.1'
+
+  unless descriptor.basePath
+    throw new Error('basePath is mandatory')
+
+  unless descriptor.apiVersion
+    throw new Error('apiVersion is mandatory')
+
   try
     # enrich the descriptor with apis
     routes = addRoutes(descriptor, resources)
