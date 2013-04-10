@@ -31,7 +31,7 @@ convertType = (swaggerType, parameter, allowMultiple, models) ->
   lowerType = swaggerType.toLowerCase()
   type = null
   if allowMultiple
-    type = 'array';
+    type = 'array'
   else
     switch lowerType
       when 'int', 'long', 'integer' then type = 'integer'
@@ -40,7 +40,7 @@ convertType = (swaggerType, parameter, allowMultiple, models) ->
       when 'byte', 'file' then type = 'file'
       else
         if swaggerType of models
-          type = 'object';
+          type = 'object'
         else
           throw new Error("Unsupported type#{if parameter? then " for parameter #{parameter}" else ''}: #{swaggerType}")
   return type
@@ -75,11 +75,16 @@ convertModel = (models, model, _stack) ->
     if prop.allowableValues?.valueType?
       switch prop.allowableValues.valueType.toLowerCase()
         when 'range'
-          prop.minimum = prop.allowableValues.min
-          prop.maximum = prop.allowableValues.max
+          if prop.allowableValues.min? and prop.allowableValues.max?
+            prop.minimum = prop.allowableValues.min
+            prop.maximum = prop.allowableValues.max
+            if prop.minimum > prop.maximum then throw new Error "min value should not be greater tha max value in #{name}"
+          else throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{name}"
           delete prop.allowableValues
         when 'list'
-          prop.enum = prop.allowableValues.values
+          if prop.allowableValues.values? and _.isArray(prop.allowableValues.values)
+            prop.enum = prop.allowableValues.values
+          else throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{name}"
           delete prop.allowableValues
 
     # resolve references
@@ -116,8 +121,8 @@ analyzeRoutes = (descriptor) ->
     for api in resource.apis
 
       # Store a route for this api.
-      route = {};
-      routes[utils.pathToRoute(api.path)] = route;
+      route = {}
+      routes[utils.pathToRoute(api.path)] = route
       # Store a verb for this operation, unless no parameter defined
       for operation in api.operations when operation?.parameters?.length
         verb = []
@@ -132,10 +137,10 @@ analyzeRoutes = (descriptor) ->
             required: spec.required is true
 
           if spec.name?
-            schema.title = spec.name;
+            schema.title = spec.name
 
           if spec.description?
-            schema.description = spec.description;
+            schema.description = spec.description
 
           if schema.type is 'object'
             _.extend(schema, convertModel(descriptor.models, if spec.properties then spec else descriptor.models[spec.dataType]))
@@ -144,10 +149,15 @@ analyzeRoutes = (descriptor) ->
           if spec.allowableValues?.valueType?
             switch spec.allowableValues.valueType.toLowerCase()
               when 'range'
-                schema.minimum = spec.min
-                schema.maximum = spec.max
+                if spec.allowableValues.min? and spec.allowableValues.max?
+                  schema.minimum = spec.allowableValues.min
+                  schema.maximum = spec.allowableValues.max
+                  if schema.minimum > schema.maximum then throw new Error "min value should not be greater tha max value in #{spec.name}"
+                else throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{spec.name}"
               when 'list'
-                schema.enum = spec.values
+                if spec.allowableValues.values? and _.isArray(spec.allowableValues.values)
+                  schema.enum = spec.allowableValues.values
+                else throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{spec.name}"
 
           if allowMultiple
             schema.items = _.clone(schema)

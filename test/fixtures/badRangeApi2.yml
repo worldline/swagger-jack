@@ -1,0 +1,18 @@
+resourcePath: /api
+apis: 
+
+- path: /api/queryparams
+  operations:
+  - httpMethod: GET
+    responseClass: void
+    nickname: returnParams
+    parameters:
+
+    - name: param1
+      dataType: int
+      paramType: query
+      required: true
+      allowableValues:
+        valueType: range
+        min: 0
+
