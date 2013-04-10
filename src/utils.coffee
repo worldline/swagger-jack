@@ -22,7 +22,7 @@ module.exports = {
       when 'number', 'integer'
         # all other values than undefined must be parsed. Empty string is not a number.
         original = value
-        value = if value isnt undefined then parseFloat(value) else undefined
+        value = if value isnt undefined and value isnt '' then Number(value) else undefined
         value = if isNaN(value) then original else value
       when 'boolean'
         # all other values than undefined must be parsed
