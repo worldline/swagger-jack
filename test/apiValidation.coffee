@@ -164,6 +164,9 @@ describe 'API validation tests', ->
       it 'should float not accepted as integer', (done) ->
         getApi 'queryparams', {param1:3.2}, {}, 400, {message: 'query parameter param1 is a number when it should be an integer'}, done
 
+      it 'should malformed number not accepted as integer', (done) ->
+        getApi 'queryparams', {param1:'3x'}, {}, 400, {message: 'query parameter param1 is a string when it should be an integer'}, done
+
       it 'should empty string not accepted for a number', (done) ->
         getApi 'queryparams?param1=', null, {}, 400, {message: 'query parameter param1 is a string when it should be an integer'}, done
 
