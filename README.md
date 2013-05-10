@@ -46,7 +46,7 @@ Then, when creating your Express application, import and configure the two middl
       api: {
         resourcePath: '/user'
         apis: [{
-          path: '/api/user/'
+          path: '/user/'
           operations: [{
             httpMethod: 'POST',
             nickname: 'create'
@@ -94,6 +94,11 @@ In the previous example, two routes are created:
 1. `POST /api/user/` to create a user (controller method `create()`)
 1. `GET /api/user/` to list existing users (controller method `list()`)
 
+As explained in the swagger specification, the descriptor `basePath` attribute is used as url prefix for every resources and their operations. 
+You should not repeat it in resources paths and apis path.
+
+The `resourcePath` in resource object is intended to be repeated in every api path.
+
 If you just want to document some existing routes, just provide a resource descriptor, and no associated controller. 
 Of course, no validation will be provided.
 
@@ -102,7 +107,7 @@ But they will not be documented nor validated.
 
 The following options are available:
 
-- descPath `String`: path of generated swagger descriptor. Must contain leading slash. Default to `/api-docs.json`
+- descPath `String`: path of generated swagger descriptor. Must contain leading slash. Default to `/api-docs.json`, with `basePath` used as prefix.
 
 
 ### Validator middleware

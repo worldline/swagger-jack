@@ -206,13 +206,15 @@ module.exports = (app, descriptor, resources, options = {}) ->
   unless descriptor.apiVersion
     throw new Error('apiVersion is mandatory')
 
-  options.descPath or= '/api-docs.json'
   match = descriptor.basePath.match /^https?:\/\/[^\/]+(?::\d+)?(\/.+)?$/
   unless match
     throw new Error("basePath #{descriptor.basePath} is not a valid url address")
   prefix = match[1] or ''
+  # do not allow trailing slash
+  prefix = prefix[..prefix.length-1] if prefix[prefix.length-1] is '/'
 
-  descRoute = new RegExp("#{prefix}#{options.descPath}(/.*)?")
+  options.descPath or= "#{prefix}/api-docs.json"
+  descRoute = new RegExp("^#{options.descPath}(/.*)?")
 
   # check mandatory descriptors
   unless descriptor.swaggerVersion
