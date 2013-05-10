@@ -1,7 +1,7 @@
 resourcePath: /api
 apis: 
 
-- path: /circular
+- path: /api/circular
   operations:
 
   - httpMethod: POST

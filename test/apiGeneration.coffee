@@ -11,7 +11,7 @@ describe 'API generation tests', ->
   server = null
   host = 'localhost'
   port = 8090
-  root = '/api'
+  root = "http://#{host}:#{port}/api"
 
   it 'should fail if no Express application is provided', ->
     assert.throws ->
@@ -186,7 +186,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'TOTO'
               nickname: 'doNotExist'
@@ -205,7 +205,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'TOTO'
               nickname: 'doNotExist'
@@ -223,7 +223,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'GET'
               nickname: 'doNotExist'
@@ -241,7 +241,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'GET'
               nickname: 'doNotExist'
@@ -260,7 +260,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'GET'
               nickname: 'doNotExist'
@@ -279,7 +279,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             responseClass: 'void'
             operations: [
               httpMethod: 'GET'
@@ -298,7 +298,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -331,7 +331,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -354,7 +354,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -377,7 +377,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/'
+            path: '/test'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -401,7 +401,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/{p1}'
+            path: '/test/{p1}'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -426,7 +426,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/{p1}'
+            path: '/test/{p1}'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -451,7 +451,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/{p1}/{p2}/{p3}'
+            path: '/test/{p1}/{p2}/{p3}'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -475,7 +475,7 @@ describe 'API generation tests', ->
         api:
           resourcePath: '/test'
           apis: [
-            path: '/{p1}/{p2}'
+            path: '/test/{p1}/{p2}'
             operations: [
               httpMethod: 'GET'
               responseClass: 'void'
@@ -541,6 +541,25 @@ describe 'API generation tests', ->
       ]
     , /operation DELETE does not allowed body parameters/
 
+  it 'should fail on api path that do not math resource path', ->
+    assert.throws ->
+      swagger.generator express(),
+        apiVersion: '1.0'
+        basePath: root
+      , [
+        api:
+          resourcePath: '/test'
+          apis: [
+            path: '/doh'
+            operations: [
+              httpMethod: 'GET'
+              nickname: 'stat'
+            ]
+          ]
+        controller: require './fixtures/sourceCrud'
+      ]
+    , /Resource \/test has an api \/doh that did not match its own path/
+
   it 'should preserve swaggerVersion', (done) ->
     # given a server with api and custom descriptor path
     app = express()
@@ -557,16 +576,16 @@ describe 'API generation tests', ->
       return done err if err?
       # when requesting the API description details
       request.get(
-        url: 'http://'+host+':'+port+'/api-docs.json'
+        url: 'http://'+host+':'+port+'/api/api-docs.json'
         json: true
       , (err, res, body) ->
         return done err if err?
         # then a json file is returned
         assert.equal res.statusCode, 200
         assert.deepEqual body,
-          apiVersion: '1.0'
-          basePath: '/api'
           swaggerVersion: "1.0"
+          apiVersion: '1.0'
+          basePath: 'http://localhost:8090/api'
           apis: []
           models: {}
         server.close()
@@ -592,7 +611,7 @@ describe 'API generation tests', ->
       return done err if err?
       # when requesting the API description details
       request.get(
-        url: 'http://'+host+':'+port+'/my-desc'
+        url: 'http://'+host+':'+port+'/api/my-desc'
         json: true
       , (err, res, body) ->
         return done err if err?
@@ -600,7 +619,7 @@ describe 'API generation tests', ->
         assert.equal res.statusCode, 200
         assert.deepEqual body,
           apiVersion: '1.0'
-          basePath: '/api'
+          basePath: root,
           swaggerVersion: "1.1"
           apis: [
             path: '/my-desc/stream'
@@ -631,7 +650,7 @@ describe 'API generation tests', ->
       return done err if err?
       # when requesting the API description details
       request.get(
-        url: 'http://'+host+':'+port+'/api-docs.json'
+        url: 'http://'+host+':'+port+'/api/api-docs.json'
         json: true
       , (err, res, body) ->
         return done err if err?
@@ -640,7 +659,7 @@ describe 'API generation tests', ->
         assert.deepEqual body,
           swaggerVersion: "1.1"
           apiVersion: '1.0'
-          basePath: '/api'
+          basePath: root
           apis: [
             path: '/api-docs.json/stream'
           ,
@@ -649,14 +668,14 @@ describe 'API generation tests', ->
           models: {}
         # then the unwired resource details are available
         request.get(
-          url: 'http://'+host+':'+port+'/api-docs.json/source'
+          url: 'http://'+host+':'+port+'/api/api-docs.json/source'
           json: true
         , (err, res, body) ->
           return done err if err?
           assert.deepEqual body,
             swaggerVersion: "1.1"
             apiVersion: '1.0'
-            basePath: '/api'
+            basePath: root
             apis: [
               path: '/source/stats'
               operations: [
@@ -703,7 +722,7 @@ describe 'API generation tests', ->
     it 'should reference models be untouched', (done) ->
       # when requesting the API description details
       request.get
-        url: 'http://'+host+':'+port+'/api-docs.json/address'
+        url: 'http://'+host+':'+port+'/api/api-docs.json/address'
         json: true
       , (err, res, body) ->
         return done err if err?
@@ -712,7 +731,7 @@ describe 'API generation tests', ->
         assert.deepEqual body,
           swaggerVersion: "1.1"
           apiVersion: '1.0'
-          basePath: '/api'
+          basePath: root
           resourcePath: '/address'
           apis: [
             path: '/address'
@@ -781,7 +800,7 @@ describe 'API generation tests', ->
     it 'should generated API be available', (done) ->
       # when using the generated APIs
       request.post
-        url: 'http://'+host+':'+port+'/source'
+        url: 'http://'+host+':'+port+'/api/source'
         json: true
         body:
           name: 'source 1'
@@ -793,7 +812,7 @@ describe 'API generation tests', ->
         assert.equal body.name, 'source 1'
         source = body
         request.get
-          url: 'http://'+host+':'+port+'/source'
+          url: 'http://'+host+':'+port+'/api/source'
           json: true
         , (err, res, body) ->
           return done err if err?
@@ -802,7 +821,7 @@ describe 'API generation tests', ->
           assert.deepEqual body, {size:1, total:1, from:0, hits:[source]}
           source.desc = 'hou yeah'
           request.put
-            url: 'http://'+host+':'+port+'/source/'+source.id
+            url: 'http://'+host+':'+port+'/api/source/'+source.id
             json: true
             body: source
           , (err, res, body) ->
@@ -811,7 +830,7 @@ describe 'API generation tests', ->
             assert.equal res.statusCode, 200, 'put source API not available'
             assert.deepEqual body, source
             request.get
-              url: 'http://'+host+':'+port+'/source/'+source.id
+              url: 'http://'+host+':'+port+'/api/source/'+source.id
               json: true
             , (err, res, body) ->
               return done err if err?
@@ -820,14 +839,14 @@ describe 'API generation tests', ->
               assert.deepEqual body, source
               assert.equal body.desc, 'hou yeah'
               request.del
-                url: 'http://'+host+':'+port+'/source/'+source.id
+                url: 'http://'+host+':'+port+'/api/source/'+source.id
                 json: true
               , (err, res, body) ->
                 return done err if err?
                 # then the API is working as expected
                 assert.equal res.statusCode, 204, 'delete source API not available'
                 request.get
-                  url: 'http://'+host+':'+port+'/source'
+                  url: 'http://'+host+':'+port+'/api/source'
                   json: true
                 , (err, res, body) ->
                   return done err if err?
@@ -839,7 +858,7 @@ describe 'API generation tests', ->
     it 'should API description be available', (done) ->
       # when requesting the API description
       request.get
-        url: 'http://'+host+':'+port+'/api-docs.json'
+        url: 'http://'+host+':'+port+'/api/api-docs.json'
         json: true
       , (err, res, body) ->
         return done err if err?
@@ -848,7 +867,7 @@ describe 'API generation tests', ->
         assert.deepEqual body,
           swaggerVersion: "1.1"
           apiVersion: '1.0'
-          basePath: '/api'
+          basePath: root
           apis: [
             path:"/api-docs.json/source"
           ,
@@ -858,7 +877,7 @@ describe 'API generation tests', ->
 
         # when requesting the API description details
         request.get
-          url: 'http://'+host+':'+port+'/api-docs.json/source'
+          url: 'http://'+host+':'+port+'/api/api-docs.json/source'
           json: true
         , (err, res, body) ->
           return done err if err?
@@ -867,7 +886,7 @@ describe 'API generation tests', ->
           assert.deepEqual body,
             swaggerVersion: "1.1"
             apiVersion: '1.0'
-            basePath: '/api'
+            basePath: root
             resourcePath: '/source'
             apis: [
               path: '/source'

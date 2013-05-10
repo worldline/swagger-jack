@@ -205,6 +205,10 @@ To me it's very handy for a start, but has three problems:
 
 ## Changelog
 
+### 1.5.0
+
+- fix basePath handling, be more strict on operation path validation ([details](https://github.com/feugy/swagger-jack/issues/10))
+
 ### 1.4.2
 
 - only expose relevant models inside the swagger descriptor for a given resource ([details](https://github.com/feugy/swagger-jack/pull/9))

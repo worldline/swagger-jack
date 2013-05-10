@@ -89,6 +89,7 @@ validateModel = (model, id, models) ->
 # Enrich the given descriptor with resources provided, and extract routes defined.
 # Validates the descriptor content.
 #
+# @param prefix [String] url prefix used before path. Must begin with '/' and NOT contain trailing '/'
 # @param descriptor [Object] Swagger descriptor (Json).
 # @param resources [Array] array of resources, with their own descriptor, controller and models
 # @return a list of routes to add, with objects containing `method`, `path` and `middleware`.
@@ -99,7 +100,7 @@ validateModel = (model, id, models) ->
 # @throws if an operation isn't a get, put, post, delete, head or options Http method
 # @throws if the NodeJS module denoted by the nickname of an operation cannot be loaded
 # @throws if different parameters of the same operation has the same name
-addRoutes = (descriptor, resources) ->
+addRoutes = (prefix, descriptor, resources) ->
   routes = []
   descriptor.apis = []
   descriptor.models = {}
@@ -123,6 +124,8 @@ addRoutes = (descriptor, resources) ->
       for api in resource.api.apis
         unless _.isString(api.path)
           throw new Error("Resource #{resource.api.resourcePath} has an api without path - D\'oh'")
+        unless 0 is api.path.indexOf resource.api.resourcePath
+          throw new Error("Resource #{resource.api.resourcePath} has an api #{api.path} that did not match its own path - We beg your peer is sleeping'")
 
         continue unless _.isArray api.operations
         for operation in api.operations
@@ -161,9 +164,9 @@ addRoutes = (descriptor, resources) ->
             throw new Error("Api #{api.path} nickname #{operation.nickname} cannot be found in controller")
 
           # load the relevant script that must contain the middelware
-          routes.push({method:verb, path:route, middleware: resource.controller[operation.nickname]})
+          routes.push({method:verb, path:"#{prefix}#{route}", middleware: resource.controller[operation.nickname]})
           if /swagger/.test process.env?.NODE_DEBUG
-            console.log("found a route #{route} with verb #{verb} bound to exported method #{operation.nickname}")
+            console.log("found a route #{prefix}#{route} with verb #{verb} bound to exported method #{operation.nickname}")
 
     # enrich descriptor
     descriptor.apis.push(resource.api)
@@ -194,30 +197,30 @@ module.exports = (app, descriptor, resources, options = {}) ->
   # validates inputs
   unless app?.handle? and app?.set?
     throw new Error('No Express application provided')
-
   unless _.isObject(descriptor)
     throw new Error('Provided root descriptor is not an object')
-
   unless _.isArray(resources)
     throw new Error('Provided resources must be an array')
+  unless descriptor.basePath
+    throw new Error('basePath is mandatory')
+  unless descriptor.apiVersion
+    throw new Error('apiVersion is mandatory')
 
   options.descPath or= '/api-docs.json'
+  match = descriptor.basePath.match /^https?:\/\/[^\/]+(?::\d+)?(\/.+)?$/
+  unless match
+    throw new Error("basePath #{descriptor.basePath} is not a valid url address")
+  prefix = match[1] or ''
 
-  descRoute = new RegExp("#{options.descPath}(/.*)?")
+  descRoute = new RegExp("#{prefix}#{options.descPath}(/.*)?")
 
   # check mandatory descriptors
   unless descriptor.swaggerVersion
     descriptor.swaggerVersion = '1.1'
 
-  unless descriptor.basePath
-    throw new Error('basePath is mandatory')
-
-  unless descriptor.apiVersion
-    throw new Error('apiVersion is mandatory')
-
   try
     # enrich the descriptor with apis
-    routes = addRoutes(descriptor, resources)
+    routes = addRoutes(prefix, descriptor, resources)
     # Creates middlewares, after a slight delay to let the router being registered
     # Otherwise, the generator middleware will be registered after the added routes
     _.defer(() ->
@@ -234,6 +237,7 @@ module.exports = (app, descriptor, resources, options = {}) ->
 
   # Express middleware for serving the descRoute.
   return (req, res, next) ->
+
     match = descRoute.exec(req.path)
     if match?
       # ignore all other request than the descriptor path
