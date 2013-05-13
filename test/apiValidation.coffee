@@ -113,6 +113,119 @@ describe 'API validation tests', ->
         .use(swagger.errorHandler())
     , /Circular reference detected: CircularUser > AddressBook > CircularUser/
 
+  describe 'given an allowableValues parameter', ->
+    it 'should a properly configured allowableValues range be validated', ->
+      assert.doesNotThrow ->
+        app = express()
+        # configured to use swagger generator
+        app.use(express.bodyParser())
+          .use(express.methodOverride())
+          .use(swagger.generator app,
+            apiVersion: '1.0'
+            basePath: root
+          , [
+            api: require './fixtures/rangeApi.yml'
+            controller: returnParams: (req, res) -> res.json status: 'passed'
+          ])
+          .use(swagger.validator(app))
+          .use(swagger.errorHandler())
+
+    it 'should an allowableValues range without min value failed', ->
+      assert.throws ->
+        app = express()
+        # configured to use swagger generator
+        app.use(express.bodyParser())
+          .use(express.methodOverride())
+          .use(swagger.generator app,
+            apiVersion: '1.0'
+            basePath: root
+          , [
+            api: require './fixtures/badRangeApi.yml'
+            controller: returnParams: (req, res) -> res.json status: 'passed'
+          ])
+          .use(swagger.validator(app))
+          .use(swagger.errorHandler())
+      , /missing allowableValues.min and\/or allowableValues.max parameters for allowableValues.range of/
+    it 'should an allowableValues range without max value failed', ->
+      assert.throws ->
+        app = express()
+        # configured to use swagger generator
+        app.use(express.bodyParser())
+          .use(express.methodOverride())
+          .use(swagger.generator app,
+            apiVersion: '1.0'
+            basePath: root
+          , [
+            api: require './fixtures/badRangeApi2.yml'
+            controller: returnParams: (req, res) -> res.json status: 'passed'
+          ])
+          .use(swagger.validator(app))
+          .use(swagger.errorHandler())
+      , /missing allowableValues.min and\/or allowableValues.max parameters for allowableValues.range of/
+    it 'should an allowableValues range with min greater than max failed', ->
+      assert.throws ->
+        app = express()
+        # configured to use swagger generator
+        app.use(express.bodyParser())
+          .use(express.methodOverride())
+          .use(swagger.generator app,
+            apiVersion: '1.0'
+            basePath: root
+          , [
+            api: require './fixtures/badRangeApi3.yml'
+            controller: returnParams: (req, res) -> res.json status: 'passed'
+          ])
+          .use(swagger.validator(app))
+          .use(swagger.errorHandler())
+      , /min value should not be greater tha max value in/
+    it 'should a properly configured allowableValues list be validated', ->
+      assert.doesNotThrow ->
+        app = express()
+        # configured to use swagger generator
+        app.use(express.bodyParser())
+          .use(express.methodOverride())
+          .use(swagger.generator app,
+            apiVersion: '1.0'
+            basePath: root
+          , [
+            api: require './fixtures/listApi.yml'
+            controller: returnParams: (req, res) -> res.json status: 'passed'
+          ])
+          .use(swagger.validator(app))
+          .use(swagger.errorHandler())
+    it 'should an allowableValues list without values failed', ->
+      assert.throws ->
+        app = express()
+        # configured to use swagger generator
+        app.use(express.bodyParser())
+          .use(express.methodOverride())
+          .use(swagger.generator app,
+            apiVersion: '1.0'
+            basePath: root
+          , [
+            api: require './fixtures/badListApi.yml'
+            controller: returnParams: (req, res) -> res.json status: 'passed'
+          ])
+          .use(swagger.validator(app))
+          .use(swagger.errorHandler())
+      , /allowableValues.values is missing or is not an array for allowableValues.list of/
+    it 'should an allowableValues range with values which is not an array failed', ->
+      assert.throws ->
+        app = express()
+        # configured to use swagger generator
+        app.use(express.bodyParser())
+          .use(express.methodOverride())
+          .use(swagger.generator app,
+            apiVersion: '1.0'
+            basePath: root
+          , [
+            api: require './fixtures/badListApi2.yml'
+            controller: returnParams: (req, res) -> res.json status: 'passed'
+          ])
+          .use(swagger.validator(app))
+          .use(swagger.errorHandler())
+      , /allowableValues.values is missing or is not an array for allowableValues.list of/
+
   describe 'given a properly configured and started server', ->
 
     # given a started server
@@ -174,6 +287,9 @@ describe 'API validation tests', ->
 
       it 'should float not accepted as integer', (done) ->
         getApi 'api/queryparams', {param1:3.2}, {}, 400, {message: 'query parameter param1 is a number when it should be an integer'}, done
+
+      it 'should malformed number not accepted as integer', (done) ->
+        getApi 'queryparams', {param1:'3x'}, {}, 400, {message: 'query parameter param1 is a string when it should be an integer'}, done
 
       it 'should empty string not accepted for a number', (done) ->
         getApi 'api/queryparams?param1=', null, {}, 400, {message: 'query parameter param1 is a string when it should be an integer'}, done
