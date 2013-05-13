@@ -252,10 +252,15 @@ To me it's very handy for a start, but has three problems:
 
 ## Changelog
 
-### 1.5.0
+### 1.6.0
 
 - fix basePath handling, be more strict on operation path validation ([details](https://github.com/feugy/swagger-jack/issues/10))
 - allow validation utilities to be used without Express's request object ([details](https://github.com/feugy/swagger-jack/issues/11))
+
+### 1.5.0
+
+- more strict check for mandatory data inside descriptors
+- test missing models that are referenced in apis
 
 ### 1.4.2
 
