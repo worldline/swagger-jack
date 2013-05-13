@@ -146,6 +146,7 @@ describe 'API validation tests', ->
           .use(swagger.validator(app))
           .use(swagger.errorHandler())
       , /missing allowableValues.min and\/or allowableValues.max parameters for allowableValues.range of/
+
     it 'should an allowableValues range without max value failed', ->
       assert.throws ->
         app = express()
@@ -162,6 +163,7 @@ describe 'API validation tests', ->
           .use(swagger.validator(app))
           .use(swagger.errorHandler())
       , /missing allowableValues.min and\/or allowableValues.max parameters for allowableValues.range of/
+
     it 'should an allowableValues range with min greater than max failed', ->
       assert.throws ->
         app = express()
@@ -178,6 +180,7 @@ describe 'API validation tests', ->
           .use(swagger.validator(app))
           .use(swagger.errorHandler())
       , /min value should not be greater tha max value in/
+
     it 'should a properly configured allowableValues list be validated', ->
       assert.doesNotThrow ->
         app = express()
@@ -193,6 +196,7 @@ describe 'API validation tests', ->
           ])
           .use(swagger.validator(app))
           .use(swagger.errorHandler())
+
     it 'should an allowableValues list without values failed', ->
       assert.throws ->
         app = express()
@@ -209,6 +213,7 @@ describe 'API validation tests', ->
           .use(swagger.validator(app))
           .use(swagger.errorHandler())
       , /allowableValues.values is missing or is not an array for allowableValues.list of/
+
     it 'should an allowableValues range with values which is not an array failed', ->
       assert.throws ->
         app = express()
@@ -289,7 +294,7 @@ describe 'API validation tests', ->
         getApi 'api/queryparams', {param1:3.2}, {}, 400, {message: 'query parameter param1 is a number when it should be an integer'}, done
 
       it 'should malformed number not accepted as integer', (done) ->
-        getApi 'queryparams', {param1:'3x'}, {}, 400, {message: 'query parameter param1 is a string when it should be an integer'}, done
+        getApi 'api/queryparams', {param1:'3x'}, {}, 400, {message: 'query parameter param1 is a string when it should be an integer'}, done
 
       it 'should empty string not accepted for a number', (done) ->
         getApi 'api/queryparams?param1=', null, {}, 400, {message: 'query parameter param1 is a string when it should be an integer'}, done

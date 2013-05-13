@@ -79,12 +79,14 @@ convertModel = (models, model, _stack) ->
             prop.minimum = prop.allowableValues.min
             prop.maximum = prop.allowableValues.max
             if prop.minimum > prop.maximum then throw new Error "min value should not be greater tha max value in #{name}"
-          else throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{name}"
+          else 
+            throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{name}"
           delete prop.allowableValues
         when 'list'
           if prop.allowableValues.values? and _.isArray(prop.allowableValues.values)
             prop.enum = prop.allowableValues.values
-          else throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{name}"
+          else 
+            throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{name}"
           delete prop.allowableValues
 
     # resolve references
@@ -153,11 +155,13 @@ analyzeRoutes = (descriptor) ->
                   schema.minimum = spec.allowableValues.min
                   schema.maximum = spec.allowableValues.max
                   if schema.minimum > schema.maximum then throw new Error "min value should not be greater tha max value in #{spec.name}"
-                else throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{spec.name}"
+                else 
+                  throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{spec.name}"
               when 'list'
                 if spec.allowableValues.values? and _.isArray(spec.allowableValues.values)
                   schema.enum = spec.allowableValues.values
-                else throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{spec.name}"
+                else 
+                  throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{spec.name}"
 
           if allowMultiple
             schema.items = _.clone(schema)
@@ -240,7 +244,6 @@ module.exports = (app) ->
   # @param next [Function] express next processing function
   # @option next err [Error] an error if any of the awaited parameters or body is missing, misformated, or invalid regarding the specification
   middleware.validate = (method, path, url, query, headers, bodyContainer, input, next) ->
-
     # path parameter extraction will be performed later by express: we must perform it ourselves
     [regex, pathParamsNames] = utils.extractParameters(path)
     specs = @routes[path][method]
