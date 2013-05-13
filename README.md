@@ -191,6 +191,48 @@ Use js-yaml to store your descriptor in a separate file, and split your code int
 ```
 
 
+### Really hacky power-tip
+
+For very specific cases, it's possible to use the validation function without request.
+
+For example:
+
+```js
+  // init your application as usual
+  var app = express();
+  var validator; // don't init yet ! the generator was not invoked
+  app.use(express.bodyParser())
+    .use(express.methodOverride())
+    .use(swagger.generator(app,
+      ...
+    , [{
+      api: require('./fixtures/validatedApi.yml'),
+      controller: require('./controller')
+    ])
+    // keep the validator middleware.
+    .use(validator = swagger.validator(app))
+    .use(swagger.errorHandler())
+
+  ...
+
+  // manually validate a "fake" url
+  var casted = {};
+  var url = '/api/queryparams';
+  // method, Express path, url, query, headers, body, casted, callback
+  validator.validate('GET', url, url, {param1:"-2", param2:"5.5"}, {}, {}, casted, function(err) {
+    if (err) {
+      // handle validation errors
+    } else {
+      // you can use casted values safely.
+    }
+  });
+```
+
+You still need to use an Express application and to declare generator and validator middlewares.
+
+Documentation for the `validate()` function can be found [in the source code](https://github.com/feugy/swagger-jack/blob/master/src/validator.coffee#L216)
+
+
 ## TODO How does it works ?
 
 To be Done
@@ -213,6 +255,7 @@ To me it's very handy for a start, but has three problems:
 ### 1.5.0
 
 - fix basePath handling, be more strict on operation path validation ([details](https://github.com/feugy/swagger-jack/issues/10))
+- allow validation utilities to be used without Express's request object ([details](https://github.com/feugy/swagger-jack/issues/11))
 
 ### 1.4.2
 

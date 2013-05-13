@@ -162,24 +162,79 @@ analyzeRoutes = (descriptor) ->
           )
   return routes
 
-
-# Performs validation of the incoming request against the expected specification.
-# The generator middleware **must** be used before this validator middleware.
-# It will register the validated routes, and check the descriptor format.
-# Only the routes specified inside the descriptor are validated, other routes are ignored.
+# Validator function.
+# Analyze the API descriptor to extract awaited parameters and body
+# When the corresponding Api is executed, validates the incoming request against the expected parameters and body,
+# and trigger comprehensive errors
 #
-# @param req [Object] the incoming request
-# @param path [String] the matched route path
-# @param specs [Array] an array of awaited parameters
-# @param next [Function] express next processing function
-# @throws an error if any of the awaited parameters or body is missing, misformated, or invalid regarding the specification
-validate = (req, path, specs, next) ->
-  # casted parameters
-  req.input = {}
-  # path parameter extraction will be performed later by express: we must perform it ourselves
-  [regex, pathParamsNames] = utils.extractParameters(path)
+# @param app [Object] the enriched Express application.
+module.exports = (app) ->
+  # validates inputs
+  unless app?.handle and app?.set?
+    throw new Error('No Express application provided')
 
-  process = () ->
+  unless app.descriptor?
+    throw new Error('No Swagger descriptor found within express application. Did you use swagger.generator middleware ?')
+
+  # Express middleware for validating incoming request.
+  middleware = (req, res, next) ->
+    # first get the matching route
+    route = req.app._router.matchRequest(req)
+    # only for known urls and methods
+    if route and route.path of @handle.routes and req.method.toUpperCase() of @handle.routes[route.path]
+
+      process = =>
+        # casted parameters
+        req.input = {}
+        @handle.validate(req.method.toUpperCase(), route.path, req.path, req.query, req.headers, req, req.input, next)
+
+      # read body
+      return process() if req.is('json') or req.is('application/x-www-form-urlencoded') or req.is('multipart/form-data')
+      # body parsing, if incoming request is not json, multipart or form-urlencoded
+      # by default, no body
+      delete req.body
+      # TODO, set request encoding to the incoming charset or to utf8 by default
+      req.on('data', (chunk) ->
+        if(!req.body)
+          req.body = ''
+        req.body += chunk
+      )
+
+      # only process raw body at the end.
+      return req.on('end', process)
+
+    next()
+
+  middleware.routes = {}
+  # analyze the descriptor
+  try
+    # make a deep copy to avoid manipulation on the descriptor
+    middleware.routes = analyzeRoutes(JSON.parse(JSON.stringify(app.descriptor)))
+  catch err
+    throw new Error("Failed to analyze descriptor: #{err.toString()}\n#{err.stack}")
+
+  # Export validation function to allow non-Express usages
+  # Performs validation of the incoming request against the expected specification.
+  # The generator middleware **must** be used before this validator middleware.
+  # It will register the validated routes, and check the descriptor format.
+  # Only the routes specified inside the descriptor are validated, other routes are ignored.
+  #
+  # @param method [String] uppercase http method
+  # @param path [String] the matched route path, in Express format (use ':' for path parameters, and with leading '/')
+  # @param url [String] the incoming request url (to extract path parameters)
+  # @param query [Object] associative array of query parameters: parameter name as key. 
+  # @param headers [Object] associative array of headers: header name as key.
+  # @param bodyContainer [Object] object that contains the body, either plain/associative array (attribute `body`) or files (attribute `files`) where file name are used as keys.
+  # Also used as output parameter: casted values will replace the original one.
+  # @param input [Object] associative array of casted parameters: must be initialized, and populated by the validate() function
+  # @param next [Function] express next processing function
+  # @option next err [Error] an error if any of the awaited parameters or body is missing, misformated, or invalid regarding the specification
+  middleware.validate = (method, path, url, query, headers, bodyContainer, input, next) ->
+
+    # path parameter extraction will be performed later by express: we must perform it ourselves
+    [regex, pathParamsNames] = utils.extractParameters(path)
+    specs = @routes[path][method]
+
     # validates all parameter in parrallel
     async.forEach(specs, (spec, done) ->
       type = spec.schema.schema.type
@@ -188,14 +243,14 @@ validate = (req, path, specs, next) ->
 
       switch spec.kind
         when 'query'
-          value = req.query[spec.name]
+          value = query[spec.name]
           errPrefix = "query parameter #{spec.name}"
         when 'header'
-          value = req.headers[spec.name]
+          value = headers[spec.name]
           errPrefix = "header #{spec.name}"
         when 'path'
           # extract the parameter value:
-          match = req.path.match(regex)
+          match = url.match(regex)
           value = match[pathParamsNames[spec.name]]
           if value
             value = decodeURIComponent(value)
@@ -205,18 +260,18 @@ validate = (req, path, specs, next) ->
           if spec.name
             # named parameter: take it from parsed body, or from file part
             if type is 'file'
-              value = req.files?[spec.name]
+              value = bodyContainer.files?[spec.name]
               # specific case of files: do not validate with json-gate
               return done if !(value?) and spec.schema.schema.required then new Error "#{errPrefix} is required"
             else
-              if req.body
-                value = req.body[spec.name]
+              if bodyContainer.body
+                value = bodyContainer.body[spec.name]
               else
                 value = undefined
           else
             errPrefix = 'body'
             # unamed parameter: take all body
-            value = req.body
+            value = bodyContainer.body
         else
           throw new Error "unsupported parameter type #{spec.kind}"
 
@@ -243,13 +298,13 @@ validate = (req, path, specs, next) ->
         else
           # enrich request
           unless spec.kind is 'body'
-            req.input[spec.name] = value
+            input[spec.name] = value
           else
             # or body
             if spec.name?
-              req.body[spec.name] = value
+              bodyContainer.body[spec.name] = value
             else
-              req.body = value
+              bodyContainer.body = value
         done(err)
       )
 
@@ -259,48 +314,4 @@ validate = (req, path, specs, next) ->
       next(err)
     )
 
-  return process() if req.is('json') or req.is('application/x-www-form-urlencoded') or req.is('multipart/form-data')
-  # body parsing, if incoming request is not json, multipart or form-urlencoded
-  # by default, no body
-  delete req.body
-  # TODO, set request encoding to the incoming charset or to utf8 by default
-  req.on('data', (chunk) ->
-    if(!req.body)
-      req.body = ''
-    req.body += chunk
-  )
-
-  # only process raw body at the end.
-  return req.on('end', process)
-
-# Validator function.
-# Analyze the API descriptor to extract awaited parameters and body
-# When the corresponding Api is executed, validates the incoming request against the expected parameters and body,
-# and trigger comprehensive errors
-#
-# @param app [Object] the enriched Express application.
-module.exports = (app) ->
-  # validates inputs
-  unless app?.handle and app?.set?
-    throw new Error('No Express application provided')
-
-  unless app.descriptor?
-    throw new Error('No Swagger descriptor found within express application. Did you use swagger.generator middleware ?')
-
-  routes = {}
-  # analyze the descriptor
-  try
-    # make a deep copy to avoid manipulation on the descriptor
-    routes = analyzeRoutes(JSON.parse(JSON.stringify(app.descriptor)))
-  catch err
-    throw new Error("Failed to analyze descriptor: #{err.toString()}\n#{err.stack}")
-
-  # Express middleware for validating incoming request.
-  return (req, res, next) ->
-    # first get the matching route
-    route = req.app._router.matchRequest(req)
-    # only for known urls and methods
-    if route and route.path of routes and req.method.toUpperCase() of routes[route.path]
-      return validate(req, route.path, routes[route.path][req.method.toUpperCase()], next)
-
-    next()
+  return middleware

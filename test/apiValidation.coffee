@@ -12,6 +12,7 @@ server = null
 host = 'localhost'
 port = 8090
 root = "http://#{host}:#{port}"
+validator = null
 
 # test function: send an Http request (a get) and expect a status and a json body.
 getApi = (name, params, headers, status, expectedBody, done, extra) ->
@@ -130,7 +131,7 @@ describe 'API validation tests', ->
             returnParams: (req, res) -> res.json req.input
             returnBody: (req, res) -> res.json body:req.body
         ])
-        .use(swagger.validator app)
+        .use(validator = swagger.validator app)
         .use(swagger.errorHandler())
 
       app.get "/unvalidated", (req, res) -> res.json status:'passed'
@@ -147,6 +148,16 @@ describe 'API validation tests', ->
 
     it 'should validated API without parameters be available', (done) ->
       getApi 'api/noparams/18', null, {}, 200, {status:'passed'}, done
+
+    it 'should validation function be called manually', (done) ->
+      casted = {}
+      url = '/api/queryparams'
+      # method, Express path, url, query, headers, body, casted, callback
+      validator.validate 'GET', url, url, {param1:"-2", param2:"5.5"}, {}, {}, casted, (err) ->
+        return done err if err?
+        assert.equal casted.param1, -2
+        assert.equal casted.param2, 5.5
+        done()
 
     describe 'given an api accepting query parameters', ->
 
