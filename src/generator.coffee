@@ -143,9 +143,9 @@ addRoutes = (prefix, descriptor, resources) ->
           # make sure the responseClass model is defined
           if operation.responseClass
             if operation.responseClass isnt "void"
-              resource.api.models[operation.responseClass] or= descriptor.models[operation.responseClass]
-              unless resource.api.models[operation.responseClass]?
-                throw new Error("responseClass #{operation.responseClass} doesn't match a model")
+              (_base1 = resource.api.models)[_name = operation.responseClass] or (_base1[_name] = descriptor.models[operation.responseClass])
+              _rClass = operation.responseClass.replace("List[", "").replace().replace("]", "")
+              throw new Error("responseClass " + operation.responseClass + " doesn't match a model")  unless resource.api.models[_rClass]?
           else
             throw new Error("responseClass is mandatory. If no result expected, responseClass should be void")
 
