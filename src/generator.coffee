@@ -255,8 +255,9 @@ module.exports = (app, descriptor, resources, options = {}) ->
        else
         # just the root
         result.apis = _.map(result.apis, (api) ->
+          descPrefix = options.descPath.replace(new RegExp("^#{prefix}"), '');
           return {
-            path: options.descPath+api.resourcePath
+            path: descPrefix+api.resourcePath
             description: api.description
           })
 
