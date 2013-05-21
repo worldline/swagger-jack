@@ -252,6 +252,11 @@ To me it's very handy for a start, but has three problems:
 
 ## Changelog
 
+### 1.6.1
+
+- do not prepend basePath to api's path with swagger root descriptor ([details](https://github.com/feugy/swagger-jack/issues/19))
+- enforce validator on api declared with basePath
+
 ### 1.6.0
 
 - fix basePath handling, be more strict on operation path validation ([details](https://github.com/feugy/swagger-jack/issues/10))

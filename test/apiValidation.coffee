@@ -113,6 +113,35 @@ describe 'API validation tests', ->
         .use(swagger.errorHandler())
     , /Circular reference detected: CircularUser > AddressBook > CircularUser/
 
+  describe 'given a basePath configured server', ->
+
+    # given a started server
+    before (done) ->
+      app = express()
+      # configured to use swagger generator
+      app.use(express.bodyParser())
+        .use(express.methodOverride())
+        .use(swagger.generator app,
+          apiVersion: '1.0'
+          basePath: "#{root}/basepath"
+        , [
+          api: require './fixtures/listApi.yml'
+          controller:
+            returnParams: (req, res) -> res.json req.input
+        ])
+        .use(validator = swagger.validator app)
+        .use(swagger.errorHandler())
+      server = http.createServer app
+      server.listen port, host, _.defer(done)
+
+    after (done) ->
+      server.close()
+      done()
+
+    it  'should api be validated', (done) ->
+      # when requesting the API
+      getApi 'basepath/api/queryparams', null, {}, 400, {message: 'query parameter param1 is required'}, done
+
   describe 'given an allowableValues parameter', ->
     it 'should a properly configured allowableValues range be validated', ->
       assert.doesNotThrow ->
@@ -530,7 +559,7 @@ describe 'API validation tests', ->
             street: 'bd vivier merle'
           ]
         postApi 'api/complexbody', {'Content-Type': 'application/json'}, JSON.stringify(obj), 400, {message: "body property 'id' is a boolean when it should be an integer"}, done
-
+        
       it 'should additionnal attribute not be allowed', (done) ->
         obj =
           id: 20

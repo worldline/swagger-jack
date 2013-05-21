@@ -611,7 +611,7 @@ describe 'API generation tests', ->
       return done err if err?
       # when requesting the API description details
       request.get(
-        url: 'http://'+host+':'+port+'/my-desc'
+        url: 'http://'+host+':'+port+'/api/my-desc'
         json: true
       , (err, res, body) ->
         return done err if err?
@@ -622,7 +622,7 @@ describe 'API generation tests', ->
           basePath: root,
           swaggerVersion: "1.1"
           apis: [
-            path: '/my-desc/stream'
+            path: 'my-desc/stream'
           ]
           models: {}
         server.close()
@@ -661,9 +661,9 @@ describe 'API generation tests', ->
           apiVersion: '1.0'
           basePath: root
           apis: [
-            path: '/api/api-docs.json/stream'
+            path: 'api-docs.json/stream'
           ,
-            path: '/api/api-docs.json/source'
+            path: 'api-docs.json/source'
           ]
           models: {}
         # then the unwired resource details are available
@@ -869,9 +869,9 @@ describe 'API generation tests', ->
           apiVersion: '1.0'
           basePath: root
           apis: [
-            path:"/api/api-docs.json/source"
+            path:"api-docs.json/source"
           ,
-            path:"/api/api-docs.json/stream"
+            path:"api-docs.json/stream"
           ]
           models: {}
 

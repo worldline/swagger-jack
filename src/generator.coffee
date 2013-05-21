@@ -1,6 +1,9 @@
 _ = require('underscore')
 utils = require('./utils')
 
+# List of lowercase raw types that are not validated as models.
+rawTypes = ['void', 'int', 'long', 'integer', 'float', 'double', 'number', 'string', 'boolean', 'array', 'any', 'null', 'byte', 'file']
+
 # Validates the specification of a given parameters
 #
 # @param parameters [Array] list of existing parameters.
@@ -142,7 +145,7 @@ addRoutes = (prefix, descriptor, resources) ->
 
           # make sure the responseClass model is defined
           if operation.responseClass
-            if operation.responseClass isnt "void"
+            unless operation.responseClass.toLowerCase() in rawTypes
               resource.api.models[operation.responseClass] or= descriptor.models[operation.responseClass]
               unless resource.api.models[operation.responseClass]?
                 throw new Error("responseClass #{operation.responseClass} doesn't match a model")
@@ -156,7 +159,7 @@ addRoutes = (prefix, descriptor, resources) ->
 
             # make sure the dataType model is defined
             for parameter in operation.parameters
-              if parameter.dataType
+              if parameter.dataType and !(parameter.dataType in rawTypes)
                 resource.api.models[parameter.dataType] or= descriptor.models[parameter.dataType]
 
           route = utils.pathToRoute(api.path)
@@ -206,15 +209,13 @@ module.exports = (app, descriptor, resources, options = {}) ->
   unless descriptor.apiVersion
     throw new Error('apiVersion is mandatory')
 
-  match = descriptor.basePath.match /^https?:\/\/[^\/]+(?::\d+)?(\/.+)?$/
-  unless match
-    throw new Error("basePath #{descriptor.basePath} is not a valid url address")
-  prefix = match[1] or ''
-  # do not allow trailing slash
-  prefix = prefix[..prefix.length-1] if prefix[prefix.length-1] is '/'
+  basePath = utils.extractBasePath(descriptor)
 
-  options.descPath or= "#{prefix}/api-docs.json"
-  descRoute = new RegExp("^#{options.descPath}(/.*)?")
+  options.descPath or= "api-docs.json"
+  # no leading slash on desc path
+  options.descPath = options.descPath[1..] if options.descPath[0] is '/'
+
+  descRoute = new RegExp("^#{basePath}/#{options.descPath}(/.*)?")
 
   # check mandatory descriptors
   unless descriptor.swaggerVersion
@@ -222,7 +223,7 @@ module.exports = (app, descriptor, resources, options = {}) ->
 
   try
     # enrich the descriptor with apis
-    routes = addRoutes(prefix, descriptor, resources)
+    routes = addRoutes(basePath, descriptor, resources)
     # Creates middlewares, after a slight delay to let the router being registered
     # Otherwise, the generator middleware will be registered after the added routes
     _.defer(() ->
@@ -232,10 +233,10 @@ module.exports = (app, descriptor, resources, options = {}) ->
 
     # Add descriptor to express application for other middlewares
     app.descriptor = descriptor
-   catch err
-     err2 = new Error("Failed to create routes from resources: #{err.toString()}")
-     err2.stack = err.stack
-     throw err2
+  catch err
+    err2 = new Error("Failed to create routes from resources: #{err.toString()}")
+    err2.stack = err.stack
+    throw err2
 
   # Express middleware for serving the descRoute.
   return (req, res, next) ->
