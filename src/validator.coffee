@@ -115,16 +115,17 @@ convertModel = (models, model, _stack) ->
 # the expected parameters and body (for PUT and POST methods), as an array of parameterSpec.
 # The descriptor content is supposed to have been previously validated by the generator middleware
 #
+# @param prefix [String] url prefix used before path. Must begin with '/' and NOT contain trailing '/'
 # @param descriptor [Object] Swagger descriptor (Json).
 # @return the analyzed routes.
-analyzeRoutes = (descriptor) ->
+analyzeRoutes = (prefix, descriptor) ->
   routes = {}
   for resource in descriptor.apis
     for api in resource.apis
 
       # Store a route for this api.
       route = {}
-      routes[utils.pathToRoute(api.path)] = route
+      routes[prefix+utils.pathToRoute(api.path)] = route
       # Store a verb for this operation, unless no parameter defined
       for operation in api.operations when operation?.parameters?.length
         verb = []
@@ -189,6 +190,8 @@ module.exports = (app) ->
 
   unless app.descriptor?
     throw new Error('No Swagger descriptor found within express application. Did you use swagger.generator middleware ?')
+  
+  basePath = utils.extractBasePath(app.descriptor)
 
   # Express middleware for validating incoming request.
   middleware = (req, res, next) ->
@@ -223,7 +226,7 @@ module.exports = (app) ->
   # analyze the descriptor
   try
     # make a deep copy to avoid manipulation on the descriptor
-    middleware.routes = analyzeRoutes(JSON.parse(JSON.stringify(app.descriptor)))
+    middleware.routes = analyzeRoutes(basePath, JSON.parse(JSON.stringify(app.descriptor)))
   catch err
     throw new Error("Failed to analyze descriptor: #{err.toString()}\n#{err.stack}")
 

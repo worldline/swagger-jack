@@ -61,4 +61,19 @@ module.exports = {
       return '([^\/]*)'
     ))
     [regex, pathParamsNames]
+
+  # Extract base path prefix (without protocol, host, port and trailing slash) of a given descriptor
+  #
+  # @param descriptor [Object] descriptor from which base path is extracted
+  # @return the corresponding base path
+  # @throw an error if found basepath is misformated
+  extractBasePath: (descriptor) ->
+    match = descriptor.basePath.match /^https?:\/\/[^\/]+(?::\d+)?(\/.+)?$/
+    unless match
+      throw new Error("basePath #{descriptor.basePath} is not a valid url address")
+    basePath = match[1] or ''
+    # do not allow trailing slash
+    basePath = basePath[..basePath.length-1] if basePath[basePath.length-1] is '/'
+    basePath
+
 }
