@@ -622,7 +622,7 @@ describe 'API generation tests', ->
           basePath: root,
           swaggerVersion: "1.1"
           apis: [
-            path: 'my-desc/stream'
+            path: '/my-desc/stream'
           ]
           models: {}
         server.close()
@@ -661,9 +661,9 @@ describe 'API generation tests', ->
           apiVersion: '1.0'
           basePath: root
           apis: [
-            path: 'api-docs.json/stream'
+            path: '/api-docs.json/stream'
           ,
-            path: 'api-docs.json/source'
+            path: '/api-docs.json/source'
           ]
           models: {}
         # then the unwired resource details are available
@@ -869,9 +869,9 @@ describe 'API generation tests', ->
           apiVersion: '1.0'
           basePath: root
           apis: [
-            path:"api-docs.json/source"
+            path:"/api-docs.json/source"
           ,
-            path:"api-docs.json/stream"
+            path:"/api-docs.json/stream"
           ]
           models: {}
 

@@ -141,6 +141,10 @@ describe 'API validation tests', ->
     it  'should api be validated', (done) ->
       # when requesting the API
       getApi 'basepath/api/queryparams', null, {}, 400, {message: 'query parameter param1 is required'}, done
+    
+    it  'should api be invpked', (done) ->
+      # when requesting the API
+      getApi 'basepath/api/queryparams?param1=2', null, {}, 200, {param1: 2}, done
 
   describe 'given an allowableValues parameter', ->
     it 'should a properly configured allowableValues range be validated', ->

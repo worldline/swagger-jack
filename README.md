@@ -252,6 +252,10 @@ To me it's very handy for a start, but has three problems:
 
 ## Changelog
 
+### 1.6.2
+
+- fix mising leading / on generated descriptor, when using non empty basePath  ([details](https://github.com/feugy/swagger-jack/issues/19))
+
 ### 1.6.1
 
 - do not prepend basePath to api's path with swagger root descriptor ([details](https://github.com/feugy/swagger-jack/issues/19))

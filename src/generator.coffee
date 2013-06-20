@@ -257,7 +257,7 @@ module.exports = (app, descriptor, resources, options = {}) ->
         # just the root
         result.apis = _.map(result.apis, (api) ->
           return {
-            path: options.descPath+api.resourcePath
+            path: '/'+options.descPath+api.resourcePath
             description: api.description
           })
 
