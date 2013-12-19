@@ -164,6 +164,9 @@ analyzeRoutes = (prefix, descriptor) ->
                 else 
                   throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{spec.name}"
 
+          if spec.pattern?
+            schema.pattern = spec.pattern
+
           if allowMultiple
             schema.items = _.clone(schema)
             schema.items.type = convertType(spec.dataType, spec.name, false, descriptor.models)
