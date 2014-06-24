@@ -59,6 +59,8 @@ convertModel = (models, model, _stack) ->
     additionalProperties: if _.isObject(model.additionalProperties) then model.additionalProperties else false
   }
   _stack ?= []
+  # copy the stack so that any "branch" of the validation tree is independent
+  _stack = _stack.slice()
   # track circular references
   if model.id?
     if -1 isnt _stack.indexOf(model.id)
@@ -79,13 +81,13 @@ convertModel = (models, model, _stack) ->
             prop.minimum = prop.allowableValues.min
             prop.maximum = prop.allowableValues.max
             if prop.minimum > prop.maximum then throw new Error "min value should not be greater tha max value in #{name}"
-          else 
+          else
             throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{name}"
           delete prop.allowableValues
         when 'list'
           if prop.allowableValues.values? and _.isArray(prop.allowableValues.values)
             prop.enum = prop.allowableValues.values
-          else 
+          else
             throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{name}"
           delete prop.allowableValues
 
@@ -156,12 +158,12 @@ analyzeRoutes = (prefix, descriptor) ->
                   schema.minimum = spec.allowableValues.min
                   schema.maximum = spec.allowableValues.max
                   if schema.minimum > schema.maximum then throw new Error "min value should not be greater tha max value in #{spec.name}"
-                else 
+                else
                   throw new Error "missing allowableValues.min and/or allowableValues.max parameters for allowableValues.range of #{spec.name}"
               when 'list'
                 if spec.allowableValues.values? and _.isArray(spec.allowableValues.values)
                   schema.enum = spec.allowableValues.values
-                else 
+                else
                   throw new Error "allowableValues.values is missing or is not an array for allowableValues.list of #{spec.name}"
 
           if allowMultiple
@@ -190,7 +192,7 @@ module.exports = (app) ->
 
   unless app.descriptor?
     throw new Error('No Swagger descriptor found within express application. Did you use swagger.generator middleware ?')
-  
+
   basePath = utils.extractBasePath(app.descriptor)
 
   # Express middleware for validating incoming request.
@@ -239,7 +241,7 @@ module.exports = (app) ->
   # @param method [String] uppercase http method
   # @param path [String] the matched route path, in Express format (use ':' for path parameters, and with leading '/')
   # @param url [String] the incoming request url (to extract path parameters)
-  # @param query [Object] associative array of query parameters: parameter name as key. 
+  # @param query [Object] associative array of query parameters: parameter name as key.
   # @param headers [Object] associative array of headers: header name as key.
   # @param bodyContainer [Object] object that contains the body, either plain/associative array (attribute `body`) or files (attribute `files`) where file name are used as keys.
   # Also used as output parameter: casted values will replace the original one.

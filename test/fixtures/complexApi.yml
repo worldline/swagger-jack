@@ -23,7 +23,9 @@ models:
         required: true
       name:
         type: string
-      addresses:
+      familyAdress:
+        type: Address
+      officeAddresses:
         type: array
         items: 
           $ref: Address
