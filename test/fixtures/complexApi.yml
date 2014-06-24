@@ -23,7 +23,7 @@ models:
         required: true
       name:
         type: string
-      familyAdress:
+      familyAddress:
         type: Address
       officeAddresses:
         type: array
