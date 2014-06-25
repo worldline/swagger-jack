@@ -252,6 +252,9 @@ To me it's very handy for a start, but has three problems:
 
 ## Changelog
 
+### 1.6.3
+- fix "Bug in method 'convertModel', for detecting circular reference" ([details](https://github.com/feugy/swagger-jack/issues/25)) 
+
 ### 1.6.2
 
 - fix mising leading / on generated descriptor, when using non empty basePath  ([details](https://github.com/feugy/swagger-jack/issues/19))
