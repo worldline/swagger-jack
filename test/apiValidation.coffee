@@ -410,6 +410,9 @@ describe 'API validation tests', ->
       it 'should int and boolean be parsed', (done) ->
         getApi 'api/pathparams/10/true', null, {}, 200, {param1:10, param2:true}, done
 
+      it 'should take wildcard path param', (done) ->
+        getApi 'api/pathparams/10/foo/bar/suffix', null, {}, 200, {param1:'10', 'param2*':'foo/bar'}, done
+
     describe 'given an api accepting body parameters', ->
 
       it 'should plain text body be parsed', (done) ->

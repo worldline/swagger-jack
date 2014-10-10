@@ -58,7 +58,7 @@ module.exports = {
     # create a regular expression to extract path parameters and isolate their names
     regex = new RegExp(path.replace(/:([^\/]+)/g, (match, key) ->
       pathParamsNames[key] = ++i
-      return '([^\/]*)'
+      return if key.match(/\*$/) then '(.*)' else '([^\/]*)'
     ))
     [regex, pathParamsNames]
 

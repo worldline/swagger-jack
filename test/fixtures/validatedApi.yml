@@ -22,6 +22,21 @@ apis:
       dataType: boolean
       paramType: path
 
+- path: /api/pathparams/{param1}/{param2*}/suffix
+  operations:
+    - httpMethod: GET
+      responseClass: void
+      nickname: returnParams
+      parameters:
+
+        - name: param1
+          dataType: string
+          paramType: path
+
+        - name: param2*
+          dataType: string
+          paramType: path
+
 - path: /api/queryparams
   operations:
   - httpMethod: GET
